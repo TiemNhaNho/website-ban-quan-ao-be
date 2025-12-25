@@ -1,20 +1,21 @@
-# from fastapi import FastAPI
-# from app.db.base import get_db
-# from app.db.base import engine
-# from app.models import Base
-# from app.routers.product_router import router as product_router
-# from app.routers.user_router import router as user_router_router
+from fastapi import FastAPI
+from app.db.base import engine
+from app.models import Base
+from app.routers.customer_router import router as customer_router
 
-# Base.metadata.create_all(bind=engine)
+Base.metadata.create_all(bind=engine)
 
-# app = FastAPI(
-#     title="CLASS A",
-#     description="UTE",
-# )
+app = FastAPI(
+    title="Tiem Nha Nho API",
+    description="API for Tiem Nha Nho - Fashion's Clothing Store",
+)
 
-# app.include_router(product_router)
-# app.include_router(user_router_router)
+app.include_router(customer_router)
 
-# @app.get("/home")
-# async def root():
-#     return {"message": "Hello World class A"}
+@app.get("/home")
+async def root():
+    return {"message": "Hello World class A"}
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
