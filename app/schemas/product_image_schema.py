@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from typing import Optional
 
 class ProductImageSchema(BaseModel):
-    id: int
+    image_id: int
     product_id: int
     image_url: str
     is_main: bool
