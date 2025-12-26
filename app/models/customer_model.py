@@ -18,6 +18,6 @@ class Customer(BaseModel):
     email: Mapped[str] = mapped_column(String(length=100), index=True)
     password_hash: Mapped[str] = mapped_column(String(length=255))
     role: Mapped[Role] = mapped_column(Enum(Role), default=Role.CUSTOMER)
-    created_at: Mapped[datetime] = mapped_column(DateTime, index=True, default=datetime.now)
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now)
+    created_at: Mapped[datetime] = mapped_column(DateTime, index=True, default=lambda: datetime.now())
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now())
     is_deactivated: Mapped[bool] = mapped_column(Boolean, default=False)

@@ -3,6 +3,10 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class Settings:
+    """
+    Basic configuration settings for the application.
+    """
+    
     MYSQL_HOST: str = os.getenv("MYSQL_HOST", "localhost")
     MYSQL_PORT: int = int(os.getenv("MYSQL_PORT", 3306))
     MYSQL_USERNAME: str = os.getenv("MYSQL_USERNAME", "root")

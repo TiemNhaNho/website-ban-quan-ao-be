@@ -12,14 +12,13 @@ router = APIRouter()
 @router.post("/register", tags=["customers"], description="Register a new customer", response_model=DataResponse[CustomerSchema])
 async def register_user(data: RegisterCustomerSchema, db: Session = Depends(get_db)):
     password = hash_password(data.password)
-    user = Customer(username=data.username, email=data.email, password_hash=password)
-    
+    customer = Customer(username=data.username, email=data.email, password_hash=password)
     try:
-        db.add(user)
+        db.add(customer)
         db.commit()
-        db.refresh(user)
-        return DataResponse.custom_response(code="201", message="Register user success", data=user)
+        db.refresh(customer)
+        return DataResponse.custom_response(code="201", message="Register new customer successfully", data=customer)
     except Exception as e:
-        return DataResponse.custom_response(code="500", message="Register user failed", data=None)
+        return DataResponse.custom_response(code="500", message="Register new customer failed", data=None)
 
 

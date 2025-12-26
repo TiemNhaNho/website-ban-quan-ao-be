@@ -11,7 +11,7 @@ class CustomerSchema(BaseModel):
     status: int
 
 class RegisterCustomerSchema(BaseModel):
-    name: str
+    username: str
     email: str
     password: str
     
