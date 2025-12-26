@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends
 from app.db.base import get_db
 from sqlalchemy.orm import Session
-from app.models.category_model import Category
 from app.models.product_model import Product
 from app.schemas.product_schema import ProductSchema, CreateProductSchema, UpdateProductSchema
 from app.schemas.base_schema import DataResponse
@@ -52,8 +51,3 @@ def update_product(product_id: int, data: UpdateProductSchema, db: Session = Dep
     db.commit()
     db.refresh(product)
     return DataResponse.custom_response(code="200", message="Update product by id", data=product)
-
-# Get category options to dropdown input for product creation
-@router.get("/categories/options", tags=["products"], description="Get category options for product creation")
-def category_options(db:Session = Depends(get_db)):
-    return db.query(Category.category_id, Category.category_name).all()

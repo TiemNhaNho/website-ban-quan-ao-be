@@ -7,7 +7,7 @@ class ProductReview(BaseModel):
     
     review_id: int = Column(Integer, primary_key=True, index=True)
     product_id: int = Column(Integer, ForeignKey("products.product_id"), nullable=False)
-    user_id: int = Column(Integer, ForeignKey("users.user_id"), nullable=False)
-    rating: int = Column(Integer, index=True)
-    comment: str = Column(Text, index=True)
-    created_at: datetime.datetime = Column(DateTime, index=True, default=datetime.datetime.utcnow)
+    customer_id: int = Column(Integer, ForeignKey("customers.id"), nullable=False)
+    rating: int = Column(Integer, index=True, nullable=False)
+    comment: str = Column(Text, nullable=True)
+    created_at: datetime = Column(DateTime, index=True, default=datetime.utcnow)

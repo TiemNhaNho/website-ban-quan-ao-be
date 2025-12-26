@@ -6,8 +6,8 @@ from sqlalchemy.orm import Session
 from fastapi import Depends
 from app.schemas.base_schema import DataResponse
 from app.core.security import hash_password
-router = APIRouter()
 
+router = APIRouter()
 
 @router.post("/register", tags=["customers"], description="Register a new customer", response_model=DataResponse[CustomerSchema])
 async def register_user(data: RegisterCustomerSchema, db: Session = Depends(get_db)):

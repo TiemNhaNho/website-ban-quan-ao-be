@@ -1,5 +1,5 @@
 from app.models.base_model import BaseModel
-from sqlalchemy import Column, String, DECIMAL, Integer, ForeignKey, DateTime
+from sqlalchemy import Column, String, DECIMAL, Integer, DateTime
 from datetime import datetime
 
 class Coupon(BaseModel):

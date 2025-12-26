@@ -1,6 +1,6 @@
 from app.models.base_model import BaseModel
 from enum import Enum
-from sqlalchemy import DECIMAL, Column, String, Enum as SANum, Integer, ForeignKey
+from sqlalchemy import DECIMAL, Column, String, Enum as SANum, Integer, ForeignKey, DateTime
 from datetime import datetime
 
 class OrderStatus(str, Enum):
@@ -14,10 +14,10 @@ class Order(BaseModel):
     __tablename__ = "orders"
 
     order_id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    customer_id = Column(Integer, ForeignKey("customers.customer_id"), nullable=False)
+    customer_id = Column(Integer, ForeignKey("customers.id"), nullable=False)
     coupon_id = Column(Integer, ForeignKey("coupons.coupon_id"), nullable=True)
     shipping_method_id = Column(Integer, ForeignKey("shipping_methods.shipping_method_id"), nullable=False)
-    order_date = Column(String, nullable=False, default=datetime.utcnow)
+    order_date = Column(DateTime, nullable=False, default=datetime.utcnow)
     subtotal = Column(DECIMAL, nullable=False)
     discount_amount = Column(DECIMAL, nullable=False)
     shipping_fee = Column(DECIMAL, nullable=False)

@@ -1,7 +1,13 @@
 from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
-from models.order_model import OrderStatus
+from app.models.order_model import OrderStatus
+
+# class OrderOptionSchema(BaseModel):
+#     order_id: int
+    
+#     class Config:
+#         from_attributes = True
 
 class OrderSchema(BaseModel):
     order_id: int

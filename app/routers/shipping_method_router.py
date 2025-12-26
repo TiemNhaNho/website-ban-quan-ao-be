@@ -16,7 +16,7 @@ async def get_shipping_methods(db: Session = Depends(get_db)):
 
 @router.get("/shipping-methods/{shipping_method_id}", tags=["shipping-methods"], description="Get a shipping method by id", response_model=DataResponse[ShippingMethodSchema])
 async def get_shipping_method(shipping_method_id: int, db: Session = Depends(get_db)):
-    shipping_method = db.query(ShippingMethod).filter(ShippingMethod.id == shipping_method_id).first()
+    shipping_method = db.query(ShippingMethod).filter(ShippingMethod.shipping_method_id == shipping_method_id).first()
     if not shipping_method:
         return DataResponse.custom_response(
             code="404", message="Shipping method not found", data=None
@@ -37,7 +37,7 @@ async def create_shipping_method(data: CreateShippingMethodSchema, db: Session =
 
 @router.put("/shipping-methods/{shipping_method_id}", tags=["shipping-methods"], description="Update a shipping method by id", response_model=DataResponse[ShippingMethodSchema])
 async def update_shipping_method(shipping_method_id: int, data: UpdateShippingMethodSchema, db: Session = Depends(get_db)):
-    shipping_method = db.query(ShippingMethod).filter(ShippingMethod.id == shipping_method_id).first()
+    shipping_method = db.query(ShippingMethod).filter(ShippingMethod.shipping_method_id == shipping_method_id).first()
     if not shipping_method:
         return DataResponse.custom_response(
             code="404", message="Shipping method not found", data=None
@@ -53,7 +53,7 @@ async def update_shipping_method(shipping_method_id: int, data: UpdateShippingMe
 
 @router.delete("/shipping-methods/{shipping_method_id}", tags=["shipping-methods"], description="Delete a shipping method by id", response_model=DataResponse[None])
 async def delete_shipping_method(shipping_method_id: int, db: Session = Depends(get_db)):
-    shipping_method = db.query(ShippingMethod).filter(ShippingMethod.id == shipping_method_id).first()
+    shipping_method = db.query(ShippingMethod).filter(ShippingMethod.shipping_method_id == shipping_method_id).first()
     if not shipping_method:
         return DataResponse.custom_response(
             code="404", message="Shipping method not found", data=None

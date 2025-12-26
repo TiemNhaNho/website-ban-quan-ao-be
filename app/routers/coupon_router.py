@@ -16,7 +16,7 @@ async def get_coupons(db: Session = Depends(get_db)):
 
 @router.get("/coupons/{coupon_id}", tags=["coupons"], description="Get a coupon by id", response_model=DataResponse[CouponSchema])
 async def get_coupon(coupon_id: int, db: Session = Depends(get_db)):
-    coupon = db.query(Coupon).filter(Coupon.id == coupon_id).first()
+    coupon = db.query(Coupon).filter(Coupon.coupon_id == coupon_id).first()
     if not coupon:
         return DataResponse.custom_response(
             code="404", message="Coupon not found", data=None
@@ -37,7 +37,7 @@ async def create_coupon(data: CreateCouponSchema, db: Session = Depends(get_db))
 
 @router.put("/coupons/{coupon_id}", tags=["coupons"], description="Update a coupon by id", response_model=DataResponse[CouponSchema])
 async def update_coupon(coupon_id: int, data: UpdateCouponSchema, db: Session = Depends(get_db)):
-    coupon = db.query(Coupon).filter(Coupon.id == coupon_id).first()
+    coupon = db.query(Coupon).filter(Coupon.coupon_id == coupon_id).first()
     if not coupon:
         return DataResponse.custom_response(
             code="404", message="Coupon not found", data=None
@@ -53,7 +53,7 @@ async def update_coupon(coupon_id: int, data: UpdateCouponSchema, db: Session = 
 
 @router.delete("/coupons/{coupon_id}", tags=["coupons"], description="Delete a coupon by id", response_model=DataResponse[None])
 async def delete_coupon(coupon_id: int, db: Session = Depends(get_db)):
-    coupon = db.query(Coupon).filter(Coupon.id == coupon_id).first()
+    coupon = db.query(Coupon).filter(Coupon.coupon_id == coupon_id).first()
     if not coupon:
         return DataResponse.custom_response(
             code="404", message="Coupon not found", data=None
@@ -62,4 +62,19 @@ async def delete_coupon(coupon_id: int, db: Session = Depends(get_db)):
     db.commit()
     return DataResponse.custom_response(
         code="200", message="Coupon deleted by id", data=None
+    )
+
+#only update the used_count field
+@router.patch("/coupons/{coupon_id}", tags=["coupons"], description="Update coupon used count by id", response_model=DataResponse[CouponSchema])
+async def update_coupon_used_count(coupon_id: int, used_count: int, db: Session = Depends(get_db)):
+    coupon = db.query(Coupon).filter(Coupon.coupon_id == coupon_id).first()
+    if not coupon:
+        return DataResponse.custom_response(
+            code="404", message="Coupon not found", data=None
+        )
+    coupon.used_count = used_count
+    db.commit()
+    db.refresh(coupon)
+    return DataResponse.custom_response(
+        code="200", message="Coupon usage count updated successfully", data=coupon
     )

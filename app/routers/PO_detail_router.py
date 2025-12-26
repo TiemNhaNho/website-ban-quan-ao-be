@@ -2,10 +2,8 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from app.models.PO_detail_model import PurchaseOrderDetail
 from app.db.base import get_db
-from app.models.PO_model import PurchaseOrder
 from app.schemas.PO_detail_schema import PurchaseOrderDetailSchema, CreatePurchaseOrderDetailSchema, UpdatePurchaseOrderDetailSchema
 from app.schemas.base_schema import DataResponse
-from utils import get_product_variant_options
 
 router = APIRouter()
 
@@ -16,9 +14,9 @@ async def get_purchase_order_details(db: Session = Depends(get_db)):
         code="200", message="Get list purchase order details", data=purchase_order_details
     )
 
-@router.get("/purchase-order-details/{purchase_order_detail_id}", tags=["purchase-order-details"], description="Get a purchase order detail by id", response_model=DataResponse[PurchaseOrderDetailSchema])
-async def get_purchase_order_detail(purchase_order_detail_id: int, db: Session = Depends(get_db)):
-    purchase_order_detail = db.query(PurchaseOrderDetail).filter(PurchaseOrderDetail.id == purchase_order_detail_id).first()
+@router.get("/purchase-order-details/{po_detail_id}", tags=["purchase-order-details"], description="Get a purchase order detail by id", response_model=DataResponse[PurchaseOrderDetailSchema])
+async def get_purchase_order_detail(po_detail_id: int, db: Session = Depends(get_db)):
+    purchase_order_detail = db.query(PurchaseOrderDetail).filter(PurchaseOrderDetail.po_detail_id == po_detail_id).first()
     if not purchase_order_detail:
         return DataResponse.custom_response(
             code="404", message="Purchase order detail not found", data=None
@@ -37,9 +35,9 @@ async def create_purchase_order_detail(data: CreatePurchaseOrderDetailSchema, db
         code="201", message="Purchase order detail created successfully", data=purchase_order_detail
     )
 
-@router.put("/purchase-order-details/{purchase_order_detail_id}", tags=["purchase-order-details"], description="Update a purchase order detail by id", response_model=DataResponse[PurchaseOrderDetailSchema])
-async def update_purchase_order_detail(purchase_order_detail_id: int, data: UpdatePurchaseOrderDetailSchema, db: Session = Depends(get_db)):
-    purchase_order_detail = db.query(PurchaseOrderDetail).filter(PurchaseOrderDetail.id == purchase_order_detail_id).first()
+@router.put("/purchase-order-details/{po_detail_id}", tags=["purchase-order-details"], description="Update a purchase order detail by id", response_model=DataResponse[PurchaseOrderDetailSchema])
+async def update_purchase_order_detail(po_detail_id: int, data: UpdatePurchaseOrderDetailSchema, db: Session = Depends(get_db)):
+    purchase_order_detail = db.query(PurchaseOrderDetail).filter(PurchaseOrderDetail.po_detail_id == po_detail_id).first()
     if not purchase_order_detail:
         return DataResponse.custom_response(
             code="404", message="Purchase order detail not found", data=None
@@ -53,9 +51,9 @@ async def update_purchase_order_detail(purchase_order_detail_id: int, data: Upda
         code="200", message="Purchase order detail updated by id", data=purchase_order_detail
     )
 
-@router.delete("/purchase-order-details/{purchase_order_detail_id}", tags=["purchase-order-details"], description="Delete a purchase order detail by id", response_model=DataResponse[None])
-async def delete_purchase_order_detail(purchase_order_detail_id: int, db: Session = Depends(get_db)):
-    purchase_order_detail = db.query(PurchaseOrderDetail).filter(PurchaseOrderDetail.id == purchase_order_detail_id).first()
+@router.delete("/purchase-order-details/{po_detail_id}", tags=["purchase-order-details"], description="Delete a purchase order detail by id", response_model=DataResponse[None])
+async def delete_purchase_order_detail(po_detail_id: int, db: Session = Depends(get_db)):
+    purchase_order_detail = db.query(PurchaseOrderDetail).filter(PurchaseOrderDetail.po_detail_id == po_detail_id).first()
     if not purchase_order_detail:
         return DataResponse.custom_response(
             code="404", message="Purchase order detail not found", data=None
@@ -66,12 +64,18 @@ async def delete_purchase_order_detail(purchase_order_detail_id: int, db: Sessio
         code="200", message="Purchase order detail deleted by id", data=None
     )
 
-# Get purchase_order options to dropdown input for purchase_order_detail creation
-@router.get("/purchase-orders/options", tags=["purchase-order-details"], description="Get purchase_orders options for purchase_order_detail creation")
-def order_options(db:Session = Depends(get_db)):
-    return db.query(PurchaseOrder.purchase_order_id).all()
-
-# Get variant options to dropdown input for purchase_order_detail creation
-@router.get("/product-variants/options", tags=["purchase-order-details"], description="Get product_variant options for purchase_order_detail creation")
-def variant_options(db:Session = Depends(get_db)):
-    return get_product_variant_options(db)
+#only update the quantity
+@router.patch("/purchase-order-details/{po_detail_id}", tags=["purchase-order-details"], description="Update quantity of a purchase order detail", response_model=DataResponse[PurchaseOrderDetailSchema])
+async def update_purchase_order_detail_quantity(po_detail_id: int, quantity: int, db: Session = Depends(get_db)):
+    purchase_order_detail = db.query(PurchaseOrderDetail).filter(PurchaseOrderDetail.po_detail_id == po_detail_id).first()
+    if not purchase_order_detail:
+        return DataResponse.custom_response(
+            code="404", message="Purchase order detail not found", data=None
+        )
+    purchase_order_detail.quantity = quantity
+    db.commit()
+    db.refresh(purchase_order_detail)
+    return DataResponse.custom_response(
+        code="200", message="Purchase order detail quantity updated successfully", data=purchase_order_detail
+    )
+    
