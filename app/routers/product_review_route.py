@@ -6,7 +6,7 @@ from app.models.customer_model import Customer
 from app.models.prodcut_review import ProductReview
 from app.schemas.product_review_schema import ProductReviewSchema, CreateProductReviewSchema
 from app.schemas.base_schema import DataResponse
-from utils import get_product_options
+from utils import get_product_options, get_customer_options
 
 router = APIRouter()
 
@@ -74,4 +74,4 @@ def product_options(db:Session = Depends(get_db)):
 # Get customer options to dropdown input for product_review creation
 @router.get("/customers/options", tags=["product-reviews"], description="Get customer options for product_review creation")
 def customer_options(db:Session = Depends(get_db)):
-    return db.query(Customer.customer_id, Customer.name).all()
+    return get_customer_options(db)

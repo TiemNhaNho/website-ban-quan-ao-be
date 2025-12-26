@@ -8,7 +8,10 @@ class ProductReviewSchema(BaseModel):
     user_id: int
     rating: int
     comment: str
-    created_at: datetime.datetime
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True
 
 class CreateProductReviewSchema(BaseModel):
     product_id: int

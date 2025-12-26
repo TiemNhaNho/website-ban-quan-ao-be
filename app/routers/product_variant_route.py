@@ -5,6 +5,7 @@ from app.models.product_model import Product
 from app.models.product_variant import ProductVariant
 from app.schemas.product_variant_schema import ProductVariantSchema, CreateProductVariantSchema, UpdateProductVariantSchema
 from app.schemas.base_schema import DataResponse
+from app.utils import get_product_options
 
 router = APIRouter()
 
@@ -65,7 +66,7 @@ async def delete_product_variant(variant_id: int, db: Session = Depends(get_db))
         code="200", message="Product variant deleted successfully", data=None
     )
 
-# Get product options to dropdown input for product_image creation
-@router.get("/products/options", tags=["product-variants"], description="Get product options for product_image creation")
+# Get product options to dropdown input for product_review creation
+@router.get("/products/options", tags=["product-reviews"], description="Get product options for product_review creation")
 def product_options(db:Session = Depends(get_db)):
-    return db.query(Product.product_id, Product.name).all()
+    return get_product_options(db)

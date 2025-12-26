@@ -56,4 +56,4 @@ def update_product(product_id: int, data: UpdateProductSchema, db: Session = Dep
 # Get category options to dropdown input for product creation
 @router.get("/categories/options", tags=["products"], description="Get category options for product creation")
 def category_options(db:Session = Depends(get_db)):
-    return db.query(Category.category_id, Category.name).all()
+    return db.query(Category.category_id, Category.category_name).all()
