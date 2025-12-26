@@ -1,17 +1,31 @@
 import contextlib
-from collections.abc import AsyncIterator
+from typing import Iterator
+
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session, sessionmaker
+
+from app.core.config import Settings
 
 class Container:
     """Dependency Injection Container"""
     
-    def __init__(self, settings: BaseAppSettings) -> None:
+    def __init__(self, settings: Settings) -> None:
         self._settings = settings
-        self._engine = create_async_engine(**settings.sqlalchemy_engine_props)
-        self._session = async_sessionmaker(bind=self._engine, expire_on_commit=False)
+        self._engine = create_engine(
+            settings.DATABASE_URL,
+            pool_size=10,
+            max_overflow=20
+        )
+        self._session_factory = sessionmaker(bind=self._engine, autocommit=False, autoflush=False)
 
-    @contextlib.asynccontextmanager
-    async def lifespan(self) -> AsyncIterator[AsyncSession]:
-        """Lifespan context manager for the container."""
-        # Initialize resources here (e.g., database connections, caches)
-        yield
-        # Clean up resources here
+    @contextlib.contextmanager
+    def session(self) -> Iterator[Session]:
+        """Provide a transactional scope around a series of operations."""
+        session: Session = self._session_factory()
+        try:
+            yield session
+        except Exception:
+            session.rollback()
+            raise
+        finally:
+            session.close()

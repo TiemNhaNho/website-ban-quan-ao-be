@@ -5,6 +5,12 @@ from datetime import datetime
 import enum
 
 class Customer(BaseModel):
+    def __init__(self, username, email, password_hash) -> None:
+        self.username = username
+        self.email = email
+        self.password_hash = password_hash
+    
+    
     @declared_attr.directive
     def __tablename__(cls) -> str:
         return "customers"
@@ -18,6 +24,6 @@ class Customer(BaseModel):
     email: Mapped[str] = mapped_column(String(length=100), index=True)
     password_hash: Mapped[str] = mapped_column(String(length=255))
     role: Mapped[Role] = mapped_column(Enum(Role), default=Role.CUSTOMER)
-    created_at: Mapped[datetime] = mapped_column(DateTime, index=True, default=lambda: datetime.now())
-    updated_at: Mapped[datetime] = mapped_column(DateTime, default=lambda: datetime.now())
+    created_at: Mapped[datetime] = mapped_column(DateTime, index=True, default=datetime.now)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now)
     is_deactivated: Mapped[bool] = mapped_column(Boolean, default=False)
