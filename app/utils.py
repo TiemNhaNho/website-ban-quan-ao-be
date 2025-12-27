@@ -1,16 +1,21 @@
 import os, smtplib, socket, re
 from email.message import EmailMessage
 from time import sleep
+from pathlib import Path
+from jinja2 import Template
 
-def send_email(body:str, subject:str, retries:int, smtp_user:str, retry_delay=3):
+def send_email(template: str, body:str, subject:str, retries:int, smtp_user:str, retry_delay=3):
     """
     Send an email using SMTP with retries.
+    template: path to email template file.
     subject: The subject of the email.
     body: The body of the email.
     smtp_user: The recipient email address.
     retries: The number of retry attempts.
     retry_delay: The delay between retries (in seconds), default is 3.
     """
+    #load template file
+    template_path = Path(template)
     
     admin_smtp_user = os.getenv("GMAIL_USER")
     admin_smtp_app_pass = os.getenv("GMAIL_APP_PASSWORD")
@@ -25,11 +30,15 @@ def send_email(body:str, subject:str, retries:int, smtp_user:str, retry_delay=3)
     except Exception as e:
         raise RuntimeError(f"DNS lookup failed for SMTP host '{admin_smtp_host}': {e}") from e
 
+    #render HTML template
+    html = Template(template_path.read_text(encoding="utf-8")).render(**body)
+
     msg = EmailMessage()
     msg["From"] = admin_smtp_user
     msg["To"] = smtp_user
     msg["Subject"] = subject
-    msg.set_content(body)
+    msg.set_content("This is an HTML email. Please view in an HTML-compatible client.")
+    msg.add_alternative(html, subtype="html")
     
     last_exec = None
     for attempt in (1, retries + 1):
