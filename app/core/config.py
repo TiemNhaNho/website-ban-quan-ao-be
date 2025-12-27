@@ -20,6 +20,9 @@ class Settings:
     # JWT Configuration
     SECRET_KEY: str = os.getenv("SECRET_KEY", "secret-key")
     ALGORITHM: str = os.getenv("ALGORITHM", "HS256")
+    
+    # Application Domain
+    domain: str = os.getenv("DOMAIN", "http://localhost:8000")
 
 
 @lru_cache()

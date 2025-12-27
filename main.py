@@ -9,8 +9,8 @@ from app.routers.category_router import router as category_router
 from app.routers.cart_router import router as cart_router
 from app.routers.order_router import router as order_router
 from app.routers.product_image_router import router as product_image_router
-from app.routers.product_variant_route import router as product_variant_router 
-from app.routers.product_review_route import router as product_review_router
+from app.routers.product_variant_router import router as product_variant_router 
+from app.routers.product_review_router import router as product_review_router
 from app.routers.order_detail_router import router as order_detail_router
 from app.routers.PO_detail_router import router as purchase_order_detail_router
 from app.routers.PO_router import router as purchase_order_router

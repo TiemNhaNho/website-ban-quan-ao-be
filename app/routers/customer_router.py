@@ -7,7 +7,7 @@ from app.models.customer_model import Customer
 from app.db.base import get_db
 from app.schemas.base_schema import DataResponse
 from app.core.security import create_access_token, hash_password, verify_password
-from app.services.customer_service import check_email_exists
+from app.services.customer_service import check_email_exists, send_activation_email
 
 router = APIRouter()
 
@@ -22,10 +22,25 @@ async def register_customer(data: RegisterCustomerSchema, db: Session = Depends(
         db.add(customer)
         db.commit()
         db.refresh(customer)
+        send_activation_email(customer)
         return DataResponse.custom_response(code="201", message="Register new customer successfully", data=customer)
     except Exception as e:
         return DataResponse.custom_response(code="500", message="Register new customer failed", data=None)
 
+@router.get("/activate-account", tags=["customers"], description="Activate a customer account", response_model=DataResponse[LoginCustomerResponseSchema])
+async def activate_customer_account(emailAddress: str, id: int, db: Session = Depends(get_db)):
+    customer = db.query(Customer).filter(Customer.email == emailAddress, Customer.id == id).first()
+    if not customer:
+        return DataResponse.custom_response(code="404", message="Customer not found", data=None)
+    
+    if customer.is_deactivated:
+        customer.is_deactivated = False
+        db.commit()
+        db.refresh(customer)
+        token = create_access_token(customer)
+        return DataResponse.custom_response(code="200", message="Customer account activated successfully", data=LoginCustomerResponseSchema(access_token=token, token_type="Bearer"))
+    else:
+        return DataResponse.custom_response(code="400", message="Customer account is already active", data=None)
 
 @router.post("/login", tags=["customers"], description="Login a customer", response_model=DataResponse[LoginCustomerResponseSchema])
 async def login_customer(data: LoginCustomerSchema, db: Session = Depends(get_db)):
