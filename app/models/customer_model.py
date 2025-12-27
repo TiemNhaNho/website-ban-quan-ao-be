@@ -5,6 +5,12 @@ from datetime import datetime
 import enum
 
 class Customer(BaseModel):
+    def __init__(self, username, email, password_hash) -> None:
+        self.username = username
+        self.email = email
+        self.password_hash = password_hash
+    
+    
     @declared_attr.directive
     def __tablename__(cls) -> str:
         return "customers"
