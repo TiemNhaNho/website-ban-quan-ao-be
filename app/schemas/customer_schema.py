@@ -6,12 +6,12 @@ class CustomerSchema(BaseModel):
     model_config = ConfigDict(from_attributes=True)
     
     id: int
-    name: str
+    username: str
     email: str
-    status: int
+    is_deactivated: int
 
 class RegisterCustomerSchema(BaseModel):
-    name: str
+    username: str
     email: str
     password: str
     
@@ -28,3 +28,18 @@ class RegisterCustomerSchema(BaseModel):
         if len(password) < 8:
             raise ValueError('Password must be at least 8 characters long')
         return password
+    
+class LoginCustomerSchema(BaseModel):
+    email: str
+    password: str
+    
+class LoginCustomerResponseSchema(BaseModel):
+    access_token: str
+    token_type: str = "Bearer"
+    
+    
+class TokenPayload(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+    
+    sub: str
+    exp: int

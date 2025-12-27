@@ -1,4 +1,6 @@
 from fastapi import FastAPI
+from starlette.middleware.cors import CORSMiddleware
+
 from app.db.base import engine
 from app.models import Base
 from app.routers.customer_router import router as customer_router
@@ -43,9 +45,13 @@ app.include_router(purchase_order_router)
 
 app.include_router(dropdown_fk_router)
 
-@app.get("/home")
-async def root():
-    return {"message": "Hello World class A"}
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 if __name__ == "__main__":
     import uvicorn
