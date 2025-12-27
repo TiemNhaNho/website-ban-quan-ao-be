@@ -11,7 +11,6 @@ from app.services.customer_service import check_email_exists
 
 router = APIRouter()
 
-
 @router.post("/register", tags=["customers"], description="Register a new customer", response_model=DataResponse[CustomerSchema])
 async def register_customer(data: RegisterCustomerSchema, db: Session = Depends(get_db)):
     if check_email_exists(data.email, db):

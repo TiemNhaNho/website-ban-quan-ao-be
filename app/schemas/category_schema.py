@@ -1,6 +1,13 @@
 from pydantic import BaseModel
 from typing import Optional
 
+# class CategoryOptionSchema(BaseModel):
+#     category_id: int
+#     category_name: str
+    
+#     class Config:
+#         from_attributes = True
+
 class CategorySchema(BaseModel):
     category_id: int
     category_name: str

@@ -1,8 +1,6 @@
 import os, smtplib, socket, re
 from email.message import EmailMessage
 from time import sleep
-from sqlalchemy.orm import Session
-from app.models.product_model import Product
 
 def send_email(body:str, subject:str, retries:int, smtp_user:str, retry_delay=3):
     """
@@ -54,7 +52,3 @@ def send_email(body:str, subject:str, retries:int, smtp_user:str, retry_delay=3)
     
     #All retries failed
     raise last_exec
-
-# Get product options to dropdown input for product_image creation
-def get_product_options(db: Session):
-    return db.query(Product.product_id, Product.name).all()
