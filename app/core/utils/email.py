@@ -15,16 +15,16 @@ def send_email(body:str, subject:str, retries:int, smtp_user:str, retry_delay=3,
     subtype: The content type of the email (plain or html), default is plain.
     """
     
-    # admin_smtp_user = os.getenv("GMAIL_USER")
-    # admin_smtp_app_pass = os.getenv("GMAIL_APP_PASSWORD")
-    # admin_smtp_host = os.getenv("SMTP_HOST")
-    # admin_smtp_port = int(os.getenv("SMTP_PORT"))
+    admin_smtp_user = os.getenv("GMAIL_USER")
+    admin_smtp_app_pass = os.getenv("GMAIL_APP_PASSWORD")
+    admin_smtp_host = os.getenv("SMTP_HOST")
+    admin_smtp_port = int(os.getenv("SMTP_PORT"))
     
     ## Test with mailtrap
-    admin_smtp_user = os.getenv("MAILTRAP_USER")
-    admin_smtp_app_pass = os.getenv("MAILTRAP_PASSWORD")
-    admin_smtp_host = os.getenv("MAILTRAP_HOST")
-    admin_smtp_port = int(os.getenv("MAILTRAP_PORT"))
+    # admin_smtp_user = os.getenv("MAILTRAP_USER")
+    # admin_smtp_app_pass = os.getenv("MAILTRAP_PASSWORD")
+    # admin_smtp_host = os.getenv("MAILTRAP_HOST")
+    # admin_smtp_port = int(os.getenv("MAILTRAP_PORT"))
 
     if not admin_smtp_user or not admin_smtp_app_pass:
         raise SystemExit("Set GMAIL_USER and GMAIL_APP_PASSWORD environment variables.")
