@@ -6,10 +6,11 @@ from app.models.order_model import Order
 from app.models.coupon_model import Coupon
 from app.models.shipping_method_model import ShippingMethod
 from app.models.order_detail_model import OrderDetail
-from app.schemas.order_schema import OrderSchema, CreateOrderDetailSchema, UpdateOrderDetailSchema
+from app.schemas.order_schema import OrderSchema, CreateOrderSchema, UpdateOrderSchema
 from app.schemas.base_schema import DataResponse
 from app.services.coupon_service import update_coupon_used_count_
 from app.services.order_service import send_order_confirmation_mail
+from decimal import Decimal
 
 router = APIRouter()
 
@@ -19,16 +20,16 @@ async def get_orders(db: Session = Depends(get_db)):
 	return DataResponse.custom_response(code="200", message="Get list of orders", data=orders)
 
 @router.post("/orders", tags=["orders"], description="Create a new order", response_model=DataResponse[OrderSchema])
-async def create_order(data: CreateOrderDetailSchema, db: Session = Depends(get_db)):
+async def create_order(data: CreateOrderSchema, db: Session = Depends(get_db)):
 	#Get shipping fee from shipping method
-	shipping_method = db.query(ShippingMethod).filter(ShippingMethod.id == data.shipping_method_id).first()
+	shipping_method = db.query(ShippingMethod).filter(ShippingMethod.shipping_method_id == data.shipping_method_id).first()
 	if not shipping_method:
 		return DataResponse.custom_response(code="401", message="Shipping method not found", data=None)
 	#Get all item with same order_id from order_detail
 	order_details = db.query(OrderDetail).filter(OrderDetail.order_id == Order.order_id).all()
 	subtotal = sum([item.quantity * item.unit_price for item in order_details])
 	#Get the discount
-	discount_amount = 0.0
+	discount_amount = Decimal("0.0")
 	if data.coupon_id:
 		coupon = db.query(Coupon).filter(Coupon.coupon_id == data.coupon_id).first()
 		if coupon:
@@ -86,10 +87,13 @@ async def delete_order(order_id: int, db: Session = Depends(get_db)):
 	return DataResponse.custom_response(code="200", message="Deleted order", data=None)
 
 @router.put("/orders/{order_id}", tags=["orders"], description="Update an order by id", response_model=DataResponse[OrderSchema])
-async def update_order(order_id: int, data: UpdateOrderDetailSchema, db: Session = Depends(get_db)):
+async def update_order(order_id: int, data: UpdateOrderSchema, db: Session = Depends(get_db)):
 	order = db.query(Order).filter(Order.order_id == order_id).first()
 	if not order:
 		return DataResponse.custom_response(code="404", message="Order not found", data=None)
+
+	# Track old coupon_id before update
+	old_coupon_id = order.coupon_id
 
 	# Update fields from input
 	update_data = data.dict(exclude_unset=True)
@@ -97,14 +101,15 @@ async def update_order(order_id: int, data: UpdateOrderDetailSchema, db: Session
 		setattr(order, key, value)
 
 	# Recalculate subtotal, discount, shipping, total
-	shipping_method = db.query(ShippingMethod).filter(ShippingMethod.id == order.shipping_method_id).first()
+	shipping_method = db.query(ShippingMethod).filter(ShippingMethod.shipping_method_id == order.shipping_method_id).first()
 	if not shipping_method:
 		return DataResponse.custom_response(code="401", message="Shipping method not found", data=None)
 
 	order_details = db.query(OrderDetail).filter(OrderDetail.order_id == order.order_id).all()
 	subtotal = sum([item.quantity * item.unit_price for item in order_details])
 
-	discount_amount = 0.0
+	discount_amount = Decimal("0.0")
+	coupon = None
 	if order.coupon_id:
 		coupon = db.query(Coupon).filter(Coupon.coupon_id == order.coupon_id).first()
 		if coupon:
@@ -112,7 +117,6 @@ async def update_order(order_id: int, data: UpdateOrderDetailSchema, db: Session
 				discount_amount = coupon.discount_value
 			else:
 				discount_amount = subtotal * (coupon.discount_value / 100)
-			update_coupon_used_count_(coupon.coupon_id, coupon.used_count + 1, db)
 
 	shipping_fee = shipping_method.base_cost
 	total_money = subtotal - discount_amount + shipping_fee
@@ -121,6 +125,17 @@ async def update_order(order_id: int, data: UpdateOrderDetailSchema, db: Session
 	order.discount_amount = discount_amount
 	order.shipping_fee = shipping_fee
 	order.total_money = total_money
+
+	# Only update coupon used count if coupon_id changed
+	if old_coupon_id != order.coupon_id:
+		# Decrease used_count for old coupon
+		if old_coupon_id:
+			old_coupon = db.query(Coupon).filter(Coupon.coupon_id == old_coupon_id).first()
+			if old_coupon and old_coupon.used_count > 0:
+				update_coupon_used_count_(old_coupon.coupon_id, old_coupon.used_count - 1, db)
+		# Increase used_count for new coupon
+		if order.coupon_id and coupon:
+			update_coupon_used_count_(coupon.coupon_id, coupon.used_count + 1, db)
 
 	db.commit()
 	db.refresh(order)

@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.models.product_variant import ProductVariant
 from app.schemas.product_variant_schema import ProductVariantSchema, CreateProductVariantSchema, UpdateProductVariantSchema
 from app.schemas.base_schema import DataResponse
+from app.services.product_variant_service import update_product_variant_stock_
 
 router = APIRouter()
 
@@ -67,14 +68,7 @@ async def delete_product_variant(variant_id: int, db: Session = Depends(get_db))
 #only update the stock_quantity
 @router.patch("/product-variants/{variant_id}", tags=["product-variants"], description="Update stock quantity of a product variant", response_model=DataResponse[ProductVariantSchema])
 async def update_product_variant_stock(variant_id: int, stock_quantity: int, db: Session = Depends(get_db)):
-    product_variant = db.query(ProductVariant).filter(ProductVariant.variant_id == variant_id).first()
-    if not product_variant:
-        return DataResponse.custom_response(
-            code="404", message="Product variant not found", data=None
-        )
-    product_variant.stock_quantity = stock_quantity
-    db.commit()
-    db.refresh(product_variant)
+    update_product_variant_stock_(variant_id, stock_quantity, db)
     return DataResponse.custom_response(
-        code="200", message="Product variant stock quantity updated successfully", data=product_variant
+        code="200", message="Product variant stock quantity updated successfully", data=db.query(ProductVariant).filter(ProductVariant.variant_id == variant_id).first()
     )

@@ -11,13 +11,13 @@ class OrderDetailSchema(BaseModel):
     class Config:
         from_attributes = True
 
-class CreateOrderDetailSchema(BaseModel):
+class CreateOrderSchema(BaseModel):
     order_id: int
     variant_id: int
     quantity: int
     unit_price: float
 
-class UpdateOrderDetailSchema(BaseModel):
+class UpdateOrderSchema(BaseModel):
     order_id: Optional[int] = None
     variant_id: Optional[int] = None
     quantity: Optional[int] = None

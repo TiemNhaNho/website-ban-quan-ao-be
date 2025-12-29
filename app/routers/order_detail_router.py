@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 from app.db.base import get_db
 from sqlalchemy.orm import Session
 from app.models.order_detail_model import OrderDetail
-from app.schemas.order_detail_schema import OrderDetailSchema, CreateOrderDetailSchema, UpdateOrderDetailSchema
+from app.schemas.order_detail_schema import OrderDetailSchema, CreateOrderSchema, UpdateOrderSchema
 from app.schemas.base_schema import DataResponse
 
 router = APIRouter()
@@ -13,7 +13,7 @@ async def get_order_details(db: Session = Depends(get_db)):
 	return DataResponse.custom_response(code="200", message="Get list of order details", data=details)
 
 @router.post("/order-details", tags=["order-details"], description="Create a new order detail", response_model=DataResponse[OrderDetailSchema])
-async def create_order_detail(data: CreateOrderDetailSchema, db: Session = Depends(get_db)):
+async def create_order_detail(data: CreateOrderSchema, db: Session = Depends(get_db)):
 	db_detail = OrderDetail(**data.dict())
 	db.add(db_detail)
 	db.commit()
@@ -37,7 +37,7 @@ async def delete_order_detail(order_detail_id: int, db: Session = Depends(get_db
 	return DataResponse.custom_response(code="200", message="Deleted order detail", data=None)
 
 @router.put("/order-details/{order_detail_id}", tags=["order-details"], description="Update an order detail by id", response_model=DataResponse[OrderDetailSchema])
-async def update_order_detail(order_detail_id: int, data: UpdateOrderDetailSchema, db: Session = Depends(get_db)):
+async def update_order_detail(order_detail_id: int, data: UpdateOrderSchema, db: Session = Depends(get_db)):
 	detail = db.query(OrderDetail).filter(OrderDetail.order_detail_id == order_detail_id).first()
 	if not detail:
 		return DataResponse.custom_response(code="404", message="Order detail not found", data=None)

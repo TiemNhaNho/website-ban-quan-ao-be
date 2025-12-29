@@ -8,6 +8,6 @@ class ProductVariant(BaseModel):
     sku: str = Column(String(10), index=True) 
     size: str = Column(String(50), index=True)
     color: str = Column(String(50), index=True)
-    stock_quantity: int = Column(Integer, index=True)
-    price_in: float = Column(Float, index=True)
+    stock_quantity: int = Column(Integer, index=True, default=0)
+    price_in: float = Column(Float, index=True, default=0.0)
     price_out: float = Column(Float, index=True)

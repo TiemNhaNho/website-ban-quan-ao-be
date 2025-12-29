@@ -6,7 +6,7 @@ from app.models.order_model import OrderStatus
 class OrderSchema(BaseModel):
     order_id: int
     customer_id: int
-    coupon_id: int
+    coupon_id: Optional[int] = None
     shipping_method_id: int
     order_date: datetime
     subtotal: float
@@ -19,9 +19,9 @@ class OrderSchema(BaseModel):
     class Config:
         from_attributes = True
 
-class CreateOrderDetailSchema(BaseModel):
+class CreateOrderSchema(BaseModel):
     customer_id: int
-    coupon_id: int
+    coupon_id: Optional[int] = None
     shipping_method_id: int
     # order_date: datetime
     # subtotal: float
@@ -31,7 +31,7 @@ class CreateOrderDetailSchema(BaseModel):
     payment_method: str
     order_status: OrderStatus = OrderStatus.NEW
 
-class UpdateOrderDetailSchema(BaseModel):
+class UpdateOrderSchema(BaseModel):
     customer_id: Optional[int] = None
     coupon_id: Optional[int] = None
     shipping_method_id: Optional[int] = None

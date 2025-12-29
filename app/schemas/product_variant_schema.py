@@ -16,8 +16,8 @@ class CreateProductVariantSchema(BaseModel):
     sku: str
     size: str
     color: str
-    stock_quantity: int
-    price_in: float
+    #stock_quantity: int
+    #price_in: float
     price_out: float
 
 class UpdateProductVariantSchema(BaseModel):
@@ -25,6 +25,6 @@ class UpdateProductVariantSchema(BaseModel):
     sku: Optional[str] = None
     size: Optional[str] = None
     color: Optional[str] = None
-    stock_quantity: Optional[int] = None
-    price_in: Optional[float] = None
+    #stock_quantity: Optional[int] = None
+    #price_in: Optional[float] = None
     price_out: Optional[float] = None
