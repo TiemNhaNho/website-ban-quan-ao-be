@@ -4,6 +4,7 @@ from app.models.coupon_model import Coupon
 from app.db.base import get_db
 from app.schemas.coupon_schema import CouponSchema, CreateCouponSchema, UpdateCouponSchema
 from app.schemas.base_schema import DataResponse
+from app.services.coupon_service import update_coupon_used_count_
 
 router = APIRouter()
 
@@ -67,14 +68,9 @@ async def delete_coupon(coupon_id: int, db: Session = Depends(get_db)):
 #only update the used_count field
 @router.patch("/coupons/{coupon_id}", tags=["coupons"], description="Update coupon used count by id", response_model=DataResponse[CouponSchema])
 async def update_coupon_used_count(coupon_id: int, used_count: int, db: Session = Depends(get_db)):
-    coupon = db.query(Coupon).filter(Coupon.coupon_id == coupon_id).first()
-    if not coupon:
-        return DataResponse.custom_response(
-            code="404", message="Coupon not found", data=None
-        )
-    coupon.used_count = used_count
-    db.commit()
-    db.refresh(coupon)
+    update_coupon_used_count_(coupon_id, used_count, db)
     return DataResponse.custom_response(
-        code="200", message="Coupon usage count updated successfully", data=coupon
+        code="200",
+        message="Coupon usage count updated successfully",
+        data=db.query(Coupon).filter(Coupon.coupon_id == coupon_id).first()
     )
