@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from app.db.base import get_db
 from sqlalchemy.orm import Session
-from app.models.product_variant import ProductVariant
+from app.models.product_variant_model import ProductVariant
 from app.schemas.product_variant_schema import ProductVariantSchema, CreateProductVariantSchema, UpdateProductVariantSchema
 from app.schemas.base_schema import DataResponse
 from app.services.product_variant_service import update_product_variant_stock_

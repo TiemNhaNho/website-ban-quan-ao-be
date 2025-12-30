@@ -18,7 +18,7 @@ class Order(BaseModel):
     coupon_id = Column(Integer, ForeignKey("coupons.coupon_id"), nullable=True)
     shipping_method_id = Column(Integer, ForeignKey("shipping_methods.shipping_method_id"), nullable=False)
     order_date = Column(DateTime, nullable=False, default=datetime.utcnow())
-    subtotal = Column(DECIMAL, nullable=False)
+    subtotal = Column(DECIMAL, nullable=False, default=0.0)
     discount_amount = Column(DECIMAL, nullable=False)
     shipping_fee = Column(DECIMAL, nullable=False)
     total_money = Column(DECIMAL, nullable=False)

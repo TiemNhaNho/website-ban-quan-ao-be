@@ -3,7 +3,7 @@ from sqlalchemy.orm import Session
 from app.models.PO_detail_model import PurchaseOrderDetail
 from app.models.PO_model import PurchaseOrder
 from app.db.base import get_db
-from app.models.product_variant import ProductVariant
+from app.models.product_variant_model import ProductVariant
 from app.schemas.PO_detail_schema import PurchaseOrderDetailSchema, CreatePurchaseOrderDetailSchema, UpdatePurchaseOrderDetailSchema
 from app.schemas.base_schema import DataResponse
 from app.services.product_variant_service import update_product_variant_stock_, update_product_variant_price_in_

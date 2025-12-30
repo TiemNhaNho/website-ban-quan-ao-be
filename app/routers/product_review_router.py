@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from app.db.base import get_db
-from app.models.product_review import ProductReview
+from app.models.product_review_model import ProductReview
 from app.schemas.product_review_schema import ProductReviewSchema, CreateProductReviewSchema
 from app.schemas.base_schema import DataResponse
 

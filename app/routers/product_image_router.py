@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from app.db.base import get_db
 from sqlalchemy.orm import Session
-from app.models.product_image import ProductImage
+from app.models.product_image_model import ProductImage
 from app.schemas.product_image_schema import ProductImageSchema, CreateProductImageSchema 
 from app.schemas.base_schema import DataResponse
 

@@ -1,6 +1,6 @@
 from decimal import Decimal
 from sqlalchemy.orm import Session
-from app.models.product_variant import ProductVariant
+from app.models.product_variant_model import ProductVariant
 
 def update_product_variant_stock_(
     variant_id: int,

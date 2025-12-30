@@ -4,7 +4,7 @@ from app.db.base import get_db
 from app.models.category_model import Category
 from app.models.customer_model import Customer
 from app.models.product_model import Product
-from app.models.product_variant import ProductVariant
+from app.models.product_variant_model import ProductVariant
 from app.models.supplier_model import Supplier
 from app.models.PO_model import PurchaseOrder
 from app.models.coupon_model import Coupon
