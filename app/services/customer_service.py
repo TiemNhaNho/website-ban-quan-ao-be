@@ -1,10 +1,19 @@
-import os
+from urllib.parse import urlencode
+
+from fastapi import HTTPException, Request
+from fastapi.responses import RedirectResponse
+import httpx
 from sqlalchemy import exists
 from sqlalchemy.orm import Session
 
 from app.core.config import get_settings
+from app.core.security import create_access_token, hash_password
 from app.core.utils.email import send_email_with_template
+from app.core.utils.password import generate_password
+from app.core.utils.logger import logger
 from app.models.customer_model import Customer
+from app.schemas.base_schema import DataResponse
+from app.schemas.customer_schema import LoginCustomerResponseSchema, RegisterCustomerSchema
 
 settings = get_settings()
 
@@ -13,10 +22,10 @@ def check_email_exists(email: str, db: Session) -> bool:
 
 def send_activation_email(customer: Customer) -> None:
     context = {
-    "username": f"{customer.username}",
-    "email": f"{customer.email}",
-    "activation_link": f"{settings.domain}/activate-account?emailAddress={customer.email}&id={customer.id}"
-}
+        "username": f"{customer.username}",
+        "email": f"{customer.email}",
+        "activation_link": f"{settings.domain}/activate-account?emailAddress={customer.email}&id={customer.id}"
+    }
 
     send_email_with_template(
         recipient=f"{customer.email}",
@@ -24,3 +33,76 @@ def send_activation_email(customer: Customer) -> None:
         template_name="activation_email/activation_email.html",
         context=context
     )
+    
+def login_with_google():
+    query_params = {
+        "client_id": settings.GOOGLE_CLIENT_ID,
+        "redirect_uri": settings.GOOGLE_REDIRECT_URI,
+        "response_type": "code",
+        "scope": "openid email profile",
+        "access_type": "offline",
+        "prompt": "consent",
+    }
+    url = f"{settings.GOOGLE_AUTH_ENDPOINT}?{urlencode(query_params)}"
+    return RedirectResponse(url)
+
+async def login_with_auth_callback(request: Request, db: Session):
+    code = request.query_params.get("code")
+    if not code:
+        raise HTTPException(status_code=400, detail="Authorization code not found")
+
+    data = {
+        "code": code,
+        "client_id": settings.GOOGLE_CLIENT_ID,
+        "client_secret": settings.GOOGLE_CLIENT_SECRET,
+        "redirect_uri": settings.GOOGLE_REDIRECT_URI,
+        "grant_type": "authorization_code",
+    }
+    
+    async with httpx.AsyncClient() as client:
+        token_response = await client.post(settings.GOOGLE_TOKEN_ENDPOINT, data=data)
+        token_data = token_response.json()
+        access_token = token_data.get("access_token")
+
+        if not access_token:
+            raise HTTPException(status_code=400, detail="Failed to retrieve access token")
+
+        headers = {"Authorization": f"Bearer {access_token}"}
+        userinfo_response = await client.get(settings.GOOGLE_USERINFO_ENDPOINT, headers=headers)
+        userinfo = userinfo_response.json()
+        
+        customer = db.query(Customer).filter(Customer.email == userinfo["email"]).first()
+        if not customer:
+            plain_password = generate_password()
+            new_customer_data = RegisterCustomerSchema(
+                username=userinfo.get("name"), 
+                email=userinfo.get("email"), 
+                password=plain_password
+            )
+            response = create_new_customer(new_customer_data, db)
+            if response.code == "201" and response.data: 
+                customer = response.data
+            else:
+                raise HTTPException(status_code=500, detail="Failed to create customer")
+            
+        token = create_access_token(customer)
+        return DataResponse.custom_response(code="200", message="Login customer with Google successfully", data=LoginCustomerResponseSchema(access_token=token, token_type="Bearer"))
+    
+def create_new_customer(data: RegisterCustomerSchema, db: Session) -> DataResponse | None:
+    password = hash_password(data.password)
+    customer = Customer(username=data.username, email=data.email, password_hash=password)
+    try:
+        db.add(customer)
+        db.commit()
+        db.refresh(customer)
+        send_activation_email(customer)
+        return DataResponse.custom_response(code="201", message="Register new customer successfully", data=customer)
+    except Exception as e:
+        logger.error(f"Failed to create customer {data.email}: {str(e)}", exc_info=True)  
+        db.rollback()  
+        return DataResponse.custom_response(code="500", message="Register new customer failed", data=None)
+    
+def register_customer_service(data: RegisterCustomerSchema, db: Session) -> DataResponse:
+    if check_email_exists(data.email, db):
+        return DataResponse.custom_response(code="400", message="Email already exists", data=None)
+    return create_new_customer(data, db)

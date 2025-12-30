@@ -23,7 +23,14 @@ class Settings:
     
     # Application Domain
     domain: str = os.getenv("DOMAIN", "http://localhost:8000")
-
+    
+    # Google OAuth Configuration
+    GOOGLE_CLIENT_ID: str = os.getenv("GOOGLE_CLIENT_ID", "")
+    GOOGLE_CLIENT_SECRET: str = os.getenv("GOOGLE_CLIENT_SECRET", "")
+    GOOGLE_REDIRECT_URI: str = os.getenv("GOOGLE_REDIRECT_URI", "http://localhost:8000/auth/callback")
+    GOOGLE_AUTH_ENDPOINT = "https://accounts.google.com/o/oauth2/v2/auth"
+    GOOGLE_TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token"
+    GOOGLE_USERINFO_ENDPOINT = "https://www.googleapis.com/oauth2/v2/userinfo"
 
 @lru_cache()
 def get_settings() -> Settings:
