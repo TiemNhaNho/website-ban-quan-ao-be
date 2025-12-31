@@ -37,25 +37,36 @@ def send_activation_email(customer: Customer) -> None:
 def login_with_google():
     query_params = {
         "client_id": settings.GOOGLE_CLIENT_ID,
-        "redirect_uri": settings.GOOGLE_REDIRECT_URI,
+        "redirect_uri": settings.REDIRECT_URI,
         "response_type": "code",
         "scope": "openid email profile",
         "access_type": "offline",
         "prompt": "consent",
+        "state": "google"
     }
     url = f"{settings.GOOGLE_AUTH_ENDPOINT}?{urlencode(query_params)}"
     return RedirectResponse(url)
 
 async def login_with_auth_callback(request: Request, db: Session):
     code = request.query_params.get("code")
+    state = request.query_params.get("state")
+    
     if not code:
         raise HTTPException(status_code=400, detail="Authorization code not found")
 
+    if state == "google":
+        return await handle_google_callback(code, db)
+    elif state == "facebook":
+        return await handle_facebook_callback(code, db)
+    else:
+        raise HTTPException(status_code=400, detail="Invalid state parameter")
+
+async def handle_google_callback(code: str, db: Session):
     data = {
         "code": code,
         "client_id": settings.GOOGLE_CLIENT_ID,
         "client_secret": settings.GOOGLE_CLIENT_SECRET,
-        "redirect_uri": settings.GOOGLE_REDIRECT_URI,
+        "redirect_uri": settings.REDIRECT_URI,
         "grant_type": "authorization_code",
     }
     
@@ -65,28 +76,73 @@ async def login_with_auth_callback(request: Request, db: Session):
         access_token = token_data.get("access_token")
 
         if not access_token:
-            raise HTTPException(status_code=400, detail="Failed to retrieve access token")
+            raise HTTPException(status_code=400, detail="Failed to retrieve access token from Google")
 
         headers = {"Authorization": f"Bearer {access_token}"}
         userinfo_response = await client.get(settings.GOOGLE_USERINFO_ENDPOINT, headers=headers)
         userinfo = userinfo_response.json()
         
-        customer = db.query(Customer).filter(Customer.email == userinfo["email"]).first()
-        if not customer:
-            plain_password = generate_password()
-            new_customer_data = RegisterCustomerSchema(
-                username=userinfo.get("name"), 
-                email=userinfo.get("email"), 
-                password=plain_password
-            )
-            response = create_new_customer(new_customer_data, db)
-            if response.code == "201" and response.data: 
-                customer = response.data
-            else:
-                raise HTTPException(status_code=500, detail="Failed to create customer")
-            
-        token = create_access_token(customer)
-        return DataResponse.custom_response(code="200", message="Login customer with Google successfully", data=LoginCustomerResponseSchema(access_token=token, token_type="Bearer"))
+        return await process_oauth_user(userinfo, db, "Google")
+
+async def handle_facebook_callback(code: str, db: Session):
+    params = {
+        "client_id": settings.FACEBOOK_CLIENT_ID,
+        "client_secret": settings.FACEBOOK_CLIENT_SECRET,
+        "redirect_uri": settings.REDIRECT_URI,
+        "code": code,
+    }
+    
+    async with httpx.AsyncClient() as client:
+        token_response = await client.get(settings.FACEBOOK_TOKEN_ENDPOINT, params=params)
+        token_data = token_response.json()
+        access_token = token_data.get("access_token")
+
+        if not access_token:
+            raise HTTPException(status_code=400, detail="Failed to retrieve access token from Facebook")
+
+        params = {
+            "fields": "id,name,email,picture",
+            "access_token": access_token
+        }
+        userinfo_response = await client.get(settings.FACEBOOK_USERINFO_ENDPOINT, params=params)
+        userinfo = userinfo_response.json()
+        
+        return await process_oauth_user(userinfo, db, "Facebook")
+
+async def process_oauth_user(userinfo: dict, db: Session, provider: str):
+    email = userinfo.get("email")
+    name = userinfo.get("name")
+    
+    if not email:
+        raise HTTPException(status_code=400, detail=f"Email not found in {provider} account")
+
+    customer = db.query(Customer).filter(Customer.email == email).first()
+    if not customer:
+        plain_password = generate_password()
+        new_customer_data = RegisterCustomerSchema(
+            username=name, 
+            email=email, 
+            password=plain_password
+        )
+        response = create_new_customer(new_customer_data, db)
+        if response and response.code == "201" and response.data: 
+            customer = response.data
+        else:
+            raise HTTPException(status_code=500, detail="Failed to create customer")
+        
+    token = create_access_token(customer)
+    return DataResponse.custom_response(code="200", message=f"Login customer with {provider} successfully", data=LoginCustomerResponseSchema(access_token=token, token_type="Bearer"))
+
+def login_with_facebook():
+    query_params = {
+        "client_id": settings.FACEBOOK_CLIENT_ID,
+        "redirect_uri": settings.REDIRECT_URI,
+        "state": "facebook",
+        "scope": "email,public_profile",
+        "response_type": "code",
+    }
+    url = f"{settings.FACEBOOK_AUTH_ENDPOINT}?{urlencode(query_params)}"
+    return RedirectResponse(url)
     
 def create_new_customer(data: RegisterCustomerSchema, db: Session) -> DataResponse | None:
     password = hash_password(data.password)

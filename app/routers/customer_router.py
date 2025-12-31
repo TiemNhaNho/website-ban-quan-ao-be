@@ -7,7 +7,7 @@ from app.models.customer_model import Customer
 from app.db.base import get_db
 from app.schemas.base_schema import DataResponse
 from app.core.security import create_access_token, verify_password
-from app.services.customer_service import login_with_auth_callback, login_with_google, register_customer_service
+from app.services.customer_service import login_with_auth_callback, login_with_google, register_customer_service, login_with_facebook
 
 router = APIRouter()
 
@@ -48,6 +48,10 @@ def get_current_customer(current_customer: Customer = Depends(authenticate)):
 @router.get("/auth/google", description="Initiate Google OAuth login", response_model=DataResponse[LoginCustomerResponseSchema])
 def login_google_oauth():
     return login_with_google()
+
+@router.get("/auth/facebook", description="Initiate Facebook OAuth login", response_model=DataResponse[LoginCustomerResponseSchema])
+def login_facebook_oauth():
+    return login_with_facebook()
 
 @router.get("/auth/callback", description="Handle OAuth callback", response_model=DataResponse[LoginCustomerResponseSchema])
 async def auth_callback(request: Request, db: Session = Depends(get_db)):
