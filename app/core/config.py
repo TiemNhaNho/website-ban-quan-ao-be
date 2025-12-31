@@ -31,6 +31,10 @@ class Settings:
     GOOGLE_AUTH_ENDPOINT = "https://accounts.google.com/o/oauth2/v2/auth"
     GOOGLE_TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token"
     GOOGLE_USERINFO_ENDPOINT = "https://www.googleapis.com/oauth2/v2/userinfo"
+    
+    # App Settings
+    port: int = int(os.getenv("PORT", 8000))
+    reload: bool = os.getenv("RELOAD", "true").lower() == "true"
 
 @lru_cache()
 def get_settings() -> Settings:

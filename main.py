@@ -1,6 +1,8 @@
+import os
 from fastapi import FastAPI
 from starlette.middleware.cors import CORSMiddleware
 
+from app.core.config import get_settings
 from app.db.base import engine
 from app.models import Base
 from app.routers.customer_router import router as customer_router
@@ -20,6 +22,8 @@ from app.routers.shipping_method_router import router as shipping_method_router
 from app.routers.dropdown_foreign_key_router import router as dropdown_fk_router
 
 Base.metadata.create_all(bind=engine)
+
+settings = get_settings()
 
 app = FastAPI(
     title="Tiem Nha Nho API",
@@ -53,6 +57,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+@app.get("/")
+async def read_root():
+    return {"message": "Welcome to Tiem Nha Nho API!"}
+
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=settings.port, reload=settings.reload)
