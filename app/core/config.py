@@ -27,14 +27,21 @@ class Settings:
     # Google OAuth Configuration
     GOOGLE_CLIENT_ID: str = os.getenv("GOOGLE_CLIENT_ID", "")
     GOOGLE_CLIENT_SECRET: str = os.getenv("GOOGLE_CLIENT_SECRET", "")
-    GOOGLE_REDIRECT_URI: str = os.getenv("GOOGLE_REDIRECT_URI", "http://localhost:8000/auth/callback")
     GOOGLE_AUTH_ENDPOINT = "https://accounts.google.com/o/oauth2/v2/auth"
     GOOGLE_TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token"
     GOOGLE_USERINFO_ENDPOINT = "https://www.googleapis.com/oauth2/v2/userinfo"
     
+    # Facebook OAuth Configuration
+    FACEBOOK_CLIENT_ID: str = os.getenv("FACEBOOK_CLIENT_ID", "")
+    FACEBOOK_CLIENT_SECRET: str = os.getenv("FACEBOOK_CLIENT_SECRET", "")
+    FACEBOOK_AUTH_ENDPOINT = "https://www.facebook.com/v18.0/dialog/oauth"
+    FACEBOOK_TOKEN_ENDPOINT = "https://graph.facebook.com/v18.0/oauth/access_token"
+    FACEBOOK_USERINFO_ENDPOINT = "https://graph.facebook.com/me"
+    
     # App Settings
     port: int = int(os.getenv("PORT", 8000))
     reload: bool = os.getenv("RELOAD", "true").lower() == "true"
+    REDIRECT_URI: str = os.getenv("REDIRECT_URI", "http://localhost:8000/auth/callback")
 
 @lru_cache()
 def get_settings() -> Settings:
