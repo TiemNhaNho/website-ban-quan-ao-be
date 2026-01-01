@@ -2,12 +2,12 @@ from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 
 from app.middleware.authenticate import authenticate
-from app.schemas.customer_schema import LoginCustomerResponseSchema, LoginCustomerSchema, RegisterCustomerSchema, CustomerSchema
+from app.schemas.customer_schema import LoginCustomerResponseSchema, LoginCustomerSchema, RegisterCustomerSchema, CustomerSchema, UpdateCustomerSchema
 from app.models.customer_model import Customer
 from app.db.base import get_db
 from app.schemas.base_schema import DataResponse
 from app.core.security import create_access_token, verify_password
-from app.services.customer_service import login_with_auth_callback, login_with_google, register_customer_service, login_with_facebook
+from app.services.customer_service import login_with_auth_callback, login_with_google, register_customer_service, login_with_facebook, update_customer_service, deactivate_customer_service
 
 router = APIRouter()
 
@@ -56,3 +56,11 @@ def login_facebook_oauth():
 @router.get("/auth/callback", description="Handle OAuth callback", response_model=DataResponse[LoginCustomerResponseSchema])
 async def auth_callback(request: Request, db: Session = Depends(get_db)):
     return await login_with_auth_callback(request, db)
+
+@router.put("/me", tags=["customers"], description="Update current customer", response_model=DataResponse[CustomerSchema], dependencies=[Depends(authenticate)])
+def update_current_customer(data: UpdateCustomerSchema, current_customer: Customer = Depends(authenticate), db: Session = Depends(get_db)):
+    return update_customer_service(current_customer.id, data, db)
+
+@router.post("/me/deactivate", tags=["customers"], description="Deactivate current customer account", response_model=DataResponse[CustomerSchema], dependencies=[Depends(authenticate)])
+def deactivate_current_customer(current_customer: Customer = Depends(authenticate), db: Session = Depends(get_db)):
+    return deactivate_customer_service(current_customer.id, db)
