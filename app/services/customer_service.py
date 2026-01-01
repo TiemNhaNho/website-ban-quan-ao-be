@@ -13,7 +13,7 @@ from app.core.utils.password import generate_password
 from app.core.utils.logger import logger
 from app.models.customer_model import Customer
 from app.schemas.base_schema import DataResponse
-from app.schemas.customer_schema import LoginCustomerResponseSchema, RegisterCustomerSchema
+from app.schemas.customer_schema import LoginCustomerResponseSchema, RegisterCustomerSchema, UpdateCustomerSchema
 
 settings = get_settings()
 
@@ -162,3 +162,50 @@ def register_customer_service(data: RegisterCustomerSchema, db: Session) -> Data
     if check_email_exists(data.email, db):
         return DataResponse.custom_response(code="400", message="Email already exists", data=None)
     return create_new_customer(data, db)
+
+def update_customer_service(customer_id: int, data: UpdateCustomerSchema, db: Session) -> DataResponse:
+    customer = db.query(Customer).filter(Customer.id == customer_id).first()
+    if not customer:
+        return DataResponse.custom_response(code="404", message="Customer not found", data=None)
+    
+    # Check if email is being changed and if it already exists
+    if data.email and data.email != customer.email:
+        if check_email_exists(data.email, db):
+            return DataResponse.custom_response(code="400", message="Email already exists", data=None)
+        customer.email = data.email
+    
+    # Update username if provided
+    if data.username:
+        customer.username = data.username
+    
+    # Update password if provided
+    if data.password:
+        customer.password_hash = hash_password(data.password)
+    
+    try:
+        db.commit()
+        db.refresh(customer)
+        return DataResponse.custom_response(code="200", message="Update customer successfully", data=customer)
+    except Exception as e:
+        logger.error(f"Failed to update customer {customer_id}: {str(e)}", exc_info=True)
+        db.rollback()
+        return DataResponse.custom_response(code="500", message="Update customer failed", data=None)
+
+def deactivate_customer_service(customer_id: int, db: Session) -> DataResponse:
+    customer = db.query(Customer).filter(Customer.id == customer_id).first()
+    if not customer:
+        return DataResponse.custom_response(code="404", message="Customer not found", data=None)
+    
+    if customer.is_deactivated:
+        return DataResponse.custom_response(code="400", message="Customer account is already deactivated", data=None)
+    
+    customer.is_deactivated = True
+    
+    try:
+        db.commit()
+        db.refresh(customer)
+        return DataResponse.custom_response(code="200", message="Deactivate customer successfully", data=customer)
+    except Exception as e:
+        logger.error(f"Failed to deactivate customer {customer_id}: {str(e)}", exc_info=True)
+        db.rollback()
+        return DataResponse.custom_response(code="500", message="Deactivate customer failed", data=None)

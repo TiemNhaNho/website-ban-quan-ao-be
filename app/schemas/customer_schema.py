@@ -43,3 +43,22 @@ class TokenPayload(BaseModel):
     
     sub: str
     exp: int
+
+class UpdateCustomerSchema(BaseModel):
+    username: str | None = None
+    email: str | None = None
+    password: str | None = None
+    
+    @field_validator('email')
+    @classmethod
+    def validate_email(cls, email: str | None):
+        if email and not re.match(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$', email):
+            raise ValueError('Invalid email address')
+        return email
+
+    @field_validator('password')
+    @classmethod
+    def validate_password(cls, password: str | None):
+        if password and len(password) < 8:
+            raise ValueError('Password must be at least 8 characters long')
+        return password
