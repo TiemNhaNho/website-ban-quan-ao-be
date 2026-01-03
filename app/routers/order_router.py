@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends
 from app.db.base import get_db
 from sqlalchemy.orm import Session
+from sqlalchemy import text
 from app.models.customer_model import Customer
 from app.models.order_model import Order
 from app.schemas.order_schema import OrderSchema, CreateOrderDetailSchema, UpdateOrderDetailSchema
@@ -33,6 +34,23 @@ async def create_order(data: CreateOrderDetailSchema, db: Session = Depends(get_
 	db.add(db_order)
 	db.commit()
 	db.refresh(db_order)
+	await db.execute(
+		text("""
+		CALL create_order_from_cart(
+			:customer_id,
+			:coupon_id,
+			:shipping_method_id,
+			:payment_method
+		)
+       """),
+		{
+			"customer_id": db_order.customer_id,
+			"coupon_id": db_order.coupon_id,
+			"shipping_method_id": db_order.shipping_method_id,
+			"payment_method": db_order.payment_method,
+		}
+	)
+	await db.commit()
 	customer = db.query(Customer).filter(Customer.id == db_order.customer_id).first()
 	if customer:
 		send_order_confirmation_mail(customer, db_order)
@@ -66,7 +84,7 @@ async def update_order(order_id: int, data: UpdateOrderDetailSchema, db: Session
 	db.refresh(order)
 	return DataResponse.custom_response(code="200", message="Updated order", data=order)
 
-#only updade order_status
+#only update order_status
 @router.patch("/orders/{order_id}", tags=["orders"], description="Update order status by id", response_model=DataResponse[OrderSchema])
 async def update_order_status(order_id: int, order_status: str, db: Session = Depends(get_db)):
     order = db.query(Order).filter(Order.order_id == order_id).first()

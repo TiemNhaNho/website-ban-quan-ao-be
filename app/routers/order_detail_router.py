@@ -20,7 +20,6 @@ async def create_order_detail(data: CreateOrderDetailSchema, db: Session = Depen
 	db_detail = OrderDetail(
 		order_id=data.order_id,
 		variant_id=data.variant_id,
-		quantity=data.quantity,
 		unit_price=unit_price
 	)
 	db.add(db_detail)
