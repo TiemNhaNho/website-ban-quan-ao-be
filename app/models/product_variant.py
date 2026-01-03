@@ -9,6 +9,6 @@ class ProductVariant(BaseModel):
     sku: str = Column(String(10), index=True) 
     size: str = Column(String(50), index=True)
     color: str = Column(String(50), index=True)
-    # stock_quantity: int = Column(Integer, index=True)
-    # price_in = Column(DECIMAL, index=True)
+    stock_quantity: int = Column(Integer, index=True)
+    price_in = Column(DECIMAL, index=True)
     price_out = Column(DECIMAL, index=True)

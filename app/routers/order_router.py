@@ -34,23 +34,14 @@ async def create_order(data: CreateOrderDetailSchema, db: Session = Depends(get_
 	db.add(db_order)
 	db.commit()
 	db.refresh(db_order)
-	await db.execute(
-		text("""
-		CALL create_order_from_cart(
-			:customer_id,
-			:coupon_id,
-			:shipping_method_id,
-			:payment_method
-		)
-       """),
-		{
-			"customer_id": db_order.customer_id,
-			"coupon_id": db_order.coupon_id,
-			"shipping_method_id": db_order.shipping_method_id,
-			"payment_method": db_order.payment_method,
-		}
-	)
-	await db.commit()
+	db.execute(
+    text("CALL create_order_detail_from_cart(:order_id, :customer_id)"),
+    {
+        "order_id": db_order.order_id,
+        "customer_id": db_order.customer_id
+    }
+)
+	db.commit()
 	customer = db.query(Customer).filter(Customer.id == db_order.customer_id).first()
 	if customer:
 		send_order_confirmation_mail(customer, db_order)
