@@ -1,5 +1,6 @@
+from unicodedata import decimal
 from app.models.base_model import BaseModel
-from sqlalchemy import Column, String, Integer, ForeignKey, Float
+from sqlalchemy import Column, String, Integer, ForeignKey, DECIMAL
 
 class ProductVariant(BaseModel):
     __tablename__ = "product_variants"
@@ -9,5 +10,5 @@ class ProductVariant(BaseModel):
     size: str = Column(String(50), index=True)
     color: str = Column(String(50), index=True)
     stock_quantity: int = Column(Integer, index=True)
-    price_in: float = Column(Float, index=True)
-    price_out: float = Column(Float, index=True)
+    price_in = Column(DECIMAL, index=True)
+    price_out = Column(DECIMAL, index=True)

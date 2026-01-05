@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.models.order_detail_model import OrderDetail
 from app.schemas.order_detail_schema import OrderDetailSchema, CreateOrderDetailSchema, UpdateOrderDetailSchema
 from app.schemas.base_schema import DataResponse
+from app.models.product_variant import ProductVariant
 
 router = APIRouter()
 
@@ -14,7 +15,13 @@ async def get_order_details(db: Session = Depends(get_db)):
 
 @router.post("/order-details", tags=["order-details"], description="Create a new order detail", response_model=DataResponse[OrderDetailSchema])
 async def create_order_detail(data: CreateOrderDetailSchema, db: Session = Depends(get_db)):
-	db_detail = OrderDetail(**data.dict())
+	unit = db.query(ProductVariant).filter(ProductVariant.variant_id == data.variant_id).first()
+	unit_price = unit.price_out if unit else 0
+	db_detail = OrderDetail(
+		order_id=data.order_id,
+		variant_id=data.variant_id,
+		unit_price=unit_price
+	)
 	db.add(db_detail)
 	db.commit()
 	db.refresh(db_detail)

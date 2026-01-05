@@ -1,11 +1,12 @@
 from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
+from app.models.coupon_model import CouponType
 
 class CouponSchema(BaseModel):
     coupon_id: int
     code: str
-    discount_type: str
+    discount_type: CouponType
     discount_value: float
     min_order_value: float
     max_discount: float
@@ -19,7 +20,7 @@ class CouponSchema(BaseModel):
 
 class CreateCouponSchema(BaseModel):
     code: str
-    discount_type: str
+    discount_type: CouponType = CouponType.FIXED
     discount_value: float
     min_order_value: float
     max_discount: float

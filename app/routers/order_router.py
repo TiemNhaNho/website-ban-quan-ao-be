@@ -1,11 +1,14 @@
 from fastapi import APIRouter, Depends
 from app.db.base import get_db
 from sqlalchemy.orm import Session
+from sqlalchemy import text
 from app.models.customer_model import Customer
 from app.models.order_model import Order
 from app.schemas.order_schema import OrderSchema, CreateOrderDetailSchema, UpdateOrderDetailSchema
 from app.schemas.base_schema import DataResponse
 from app.services.order_service import send_order_confirmation_mail
+from app.models.shipping_method_model import ShippingMethod
+from app.models.coupon_model import Coupon
 
 router = APIRouter()
 
@@ -16,10 +19,29 @@ async def get_orders(db: Session = Depends(get_db)):
 
 @router.post("/orders", tags=["orders"], description="Create a new order", response_model=DataResponse[OrderSchema])
 async def create_order(data: CreateOrderDetailSchema, db: Session = Depends(get_db)):
-	db_order = Order(**data.dict())
+	shipping = db.query(ShippingMethod).filter(ShippingMethod.shipping_method_id == data.shipping_method_id).first()
+	coupon = db.query(Coupon).filter(Coupon.coupon_id == data.coupon_id).first()
+	discount_amount = coupon.discount_value if coupon else 0
+	shipping_fee = shipping.base_cost
+	db_order = Order(
+		customer_id=data.customer_id,
+		coupon_id=data.coupon_id,
+		shipping_method_id=data.shipping_method_id,
+		discount_amount=discount_amount,
+		shipping_fee=shipping_fee,
+		payment_method=data.payment_method,
+	)
 	db.add(db_order)
 	db.commit()
 	db.refresh(db_order)
+	db.execute(
+    text("CALL create_order_detail_from_cart(:order_id, :customer_id)"),
+    {
+        "order_id": db_order.order_id,
+        "customer_id": db_order.customer_id
+    }
+)
+	db.commit()
 	customer = db.query(Customer).filter(Customer.id == db_order.customer_id).first()
 	if customer:
 		send_order_confirmation_mail(customer, db_order)
@@ -52,3 +74,14 @@ async def update_order(order_id: int, data: UpdateOrderDetailSchema, db: Session
 	db.commit()
 	db.refresh(order)
 	return DataResponse.custom_response(code="200", message="Updated order", data=order)
+
+#only update order_status
+@router.patch("/orders/{order_id}", tags=["orders"], description="Update order status by id", response_model=DataResponse[OrderSchema])
+async def update_order_status(order_id: int, order_status: str, db: Session = Depends(get_db)):
+    order = db.query(Order).filter(Order.order_id == order_id).first()
+    if not order:
+        return DataResponse.custom_response(code="404", message="Order not found", data=None)
+    order.order_status = order_status
+    db.commit()
+    db.refresh(order)
+    return DataResponse.custom_response(code="200", message="Updated order status", data=order)
