@@ -5,6 +5,7 @@ from app.models.product_model import Product
 from app.schemas.product_schema import ProductSchema, CreateProductSchema, UpdateProductSchema
 from app.schemas.base_schema import DataResponse
 #from datetime import datetime
+from app.middleware.authorize import require_admin
 
 router = APIRouter()
 
@@ -13,7 +14,7 @@ async def get_products(db: Session = Depends(get_db)):
     products = db.query(Product).all()
     return DataResponse.custom_response(code="200", message="get list products", data=products)
 
-@router.post("/products", tags=["products"], description="Create a new product", response_model=DataResponse[ProductSchema])
+@router.post("/products", tags=["products"], description="Create a new product", response_model=DataResponse[ProductSchema], dependencies=[Depends(require_admin)])
 async def create_product(data: CreateProductSchema, db: Session = Depends(get_db)):
     db_product = Product(**data.dict())
     db.add(db_product)
@@ -28,7 +29,7 @@ def get_product(product_id: int, db: Session = Depends(get_db)):
         return DataResponse.custom_response(code="404", message="Product not found", data=None)
     return DataResponse.custom_response(code="200", message="Get product by id", data=product)
 
-@router.delete("/products/{product_id}", tags=["products"], description="Delete a product by id", response_model=DataResponse[ProductSchema])
+@router.delete("/products/{product_id}", tags=["products"], description="Delete a product by id", response_model=DataResponse[ProductSchema], dependencies=[Depends(require_admin)])
 def delete_product(product_id: int, db: Session = Depends(get_db)):
     product = db.query(Product).filter(Product.product_id == product_id).first()
     if not product:
@@ -39,7 +40,7 @@ def delete_product(product_id: int, db: Session = Depends(get_db)):
     db.commit()
     return DataResponse.custom_response(code="200", message="Delete product by id", data=None)
 
-@router.put("/products/{product_id}", tags=["products"], description="Update a product by id", response_model=DataResponse[ProductSchema])
+@router.put("/products/{product_id}", tags=["products"], description="Update a product by id", response_model=DataResponse[ProductSchema], dependencies=[Depends(require_admin)])
 def update_product(product_id: int, data: UpdateProductSchema, db: Session = Depends(get_db)):
     product = db.query(Product).filter(Product.product_id == product_id).first()
     if not product:
