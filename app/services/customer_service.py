@@ -24,7 +24,8 @@ def send_activation_email(customer: Customer) -> None:
     context = {
         "username": f"{customer.username}",
         "email": f"{customer.email}",
-        "activation_link": f"{settings.domain}/activate-account?emailAddress={customer.email}&id={customer.id}"
+        "activation_link": f"{settings.domain}/activate-account?emailAddress={customer.email}&id={customer.id}",
+        "domain": settings.domain
     }
 
     send_email_with_template(

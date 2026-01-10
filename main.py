@@ -1,5 +1,6 @@
 import os
 from fastapi import FastAPI
+from fastapi.staticfiles import StaticFiles
 from starlette.middleware.cors import CORSMiddleware
 
 from app.core.config import get_settings
@@ -29,6 +30,8 @@ app = FastAPI(
     title="Tiem Nha Nho API",
     description="API for Tiem Nha Nho - Fashion's Clothing Store",
 )
+
+app.mount("/static", StaticFiles(directory="app/static"), name="static")
 
 app.include_router(cart_router)
 app.include_router(category_router)
