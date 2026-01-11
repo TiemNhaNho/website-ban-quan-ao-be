@@ -1,6 +1,6 @@
 from pydantic import ValidationError
 
-import jwt
+import jwt as pyjwt  # Import as pyjwt to avoid conflicts
 from fastapi.security import HTTPBearer
 from fastapi import Depends, HTTPException
 from sqlalchemy.orm import Session
@@ -18,13 +18,13 @@ settings = get_settings()
 
 def authenticate(http_authorization_credentials=Depends(reusable_oauth), db: Session = Depends(get_db)):
     try:
-        payload = jwt.decode(
+        payload = pyjwt.decode(
             http_authorization_credentials.credentials, settings.SECRET_KEY,
             algorithms=settings.ALGORITHM
         )
         token_data = TokenPayload(**payload)
 
-    except (jwt.PyJWTError, ValidationError) as e:
+    except (pyjwt.PyJWTError, ValidationError) as e:
         raise HTTPException(
             status_code=403,
             detail="Invalid or expired authentication token"
