@@ -130,9 +130,30 @@ async def process_oauth_user(userinfo: dict, db: Session, provider: str):
             customer = response.data
         else:
             raise HTTPException(status_code=500, detail="Failed to create customer")
+    
+    # Kiểm tra tài khoản có bị deactivate không
+    if customer.is_deactivated:
+        raise HTTPException(
+            status_code=403, 
+            detail="Your account has been deactivated. Please contact support or activate your account."
+        )
         
     token = create_access_token(customer)
-    return DataResponse.custom_response(code="200", message=f"Login customer with {provider} successfully", data=LoginCustomerResponseSchema(access_token=token, token_type="Bearer"))
+    
+    # Redirect về frontend OAuth callback page
+    # IMPORTANT: Update this URL to match your Live Server setup
+    # Check your browser URL when opening login.html, then use the same base path
+    
+    # Option 1: Live Server opened from TiemNhaNho folder (most common)
+    redirect_url = f"http://127.0.0.1:5500/oauth-callback.html?token={token}&provider={provider}"
+    
+    # Option 2: Live Server opened from root project folder
+    # redirect_url = f"http://127.0.0.1:5500/website-ban-quan-ao-fe/TiemNhaNho/oauth-callback.html?token={token}&provider={provider}"
+    
+    # Option 3: Python HTTP server from TiemNhaNho folder
+    # redirect_url = f"http://localhost:5500/oauth-callback.html?token={token}&provider={provider}"
+    
+    return RedirectResponse(url=redirect_url)
 
 def login_with_facebook():
     query_params = {
