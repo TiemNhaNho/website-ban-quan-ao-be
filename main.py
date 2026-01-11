@@ -21,7 +21,7 @@ from app.routers.supplier_router import router as supplier_router
 from app.routers.coupon_router import router as coupon_router
 from app.routers.shipping_method_router import router as shipping_method_router
 from app.routers.dropdown_foreign_key_router import router as dropdown_fk_router
-
+from pathlib import Path
 Base.metadata.create_all(bind=engine)
 
 settings = get_settings()
@@ -30,9 +30,12 @@ app = FastAPI(
     title="Tiem Nha Nho API",
     description="API for Tiem Nha Nho - Fashion's Clothing Store",
 )
-
-app.mount("/static", StaticFiles(directory="app/static"), name="static")
-
+BASE_DIR = Path(__file__).resolve().parent
+app.mount(
+    "/static",
+    StaticFiles(directory=BASE_DIR / "app" / "static"),
+    name="static"
+)
 app.include_router(cart_router)
 app.include_router(category_router)
 app.include_router(supplier_router)

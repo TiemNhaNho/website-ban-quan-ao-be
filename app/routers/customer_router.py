@@ -37,6 +37,27 @@ def login_customer(data: LoginCustomerSchema, db: Session = Depends(get_db)):
     if not customer or not verify_password(data.password, customer.password_hash):
         return DataResponse.custom_response(code="401", message="Invalid email or password", data=None)
     
+    # Kiểm tra tài khoản có bị deactivate không
+    if customer.is_deactivated:
+        return DataResponse.custom_response(
+            code="403", 
+            message="Your account has been deactivated. Please contact support or activate your account.", 
+            data=None
+        )
+    
+    # Re-hash password if it's using old method (transparent migration)
+    try:
+        from app.core.security import _preprocess_password, hash_password
+        import bcrypt
+        preprocessed = _preprocess_password(data.password)
+        
+        # If old method works but new doesn't, re-hash
+        if not bcrypt.checkpw(preprocessed, customer.password_hash.encode('utf-8')):
+            customer.password_hash = hash_password(data.password)
+            db.commit()
+    except Exception:
+        pass
+    
     token = create_access_token(customer)
     
     return DataResponse.custom_response(code="200", message="Login customer successfully", data=LoginCustomerResponseSchema(access_token=token, token_type="Bearer"))

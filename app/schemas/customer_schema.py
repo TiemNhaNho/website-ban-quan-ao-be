@@ -27,6 +27,8 @@ class RegisterCustomerSchema(BaseModel):
     def validate_password(cls, password: str):
         if len(password) < 8:
             raise ValueError('Password must be at least 8 characters long')
+        if len(password) > 128:
+            raise ValueError('Password too long (maximum 128 characters)')
         return password
     
 class LoginCustomerSchema(BaseModel):
@@ -61,4 +63,6 @@ class UpdateCustomerSchema(BaseModel):
     def validate_password(cls, password: str | None):
         if password and len(password) < 8:
             raise ValueError('Password must be at least 8 characters long')
+        if password and len(password) > 128:
+            raise ValueError('Password too long (maximum 128 characters)')
         return password
