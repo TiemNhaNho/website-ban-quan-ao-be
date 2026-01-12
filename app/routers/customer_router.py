@@ -62,6 +62,11 @@ def login_customer(data: LoginCustomerSchema, db: Session = Depends(get_db)):
     
     return DataResponse.custom_response(code="200", message="Login customer successfully", data=LoginCustomerResponseSchema(access_token=token, token_type="Bearer"))
 
+@router.get("/customers", tags=["customers"], description="Get all customers", response_model=DataResponse[list[CustomerSchema]], dependencies=[Depends(authenticate)])
+def get_all_customers(db: Session = Depends(get_db)):
+    customers = db.query(Customer).all()
+    return DataResponse.custom_response(code="200", message="Get list customers successfully", data=customers)
+
 @router.get("/me", tags=["customers"], description="Get current customer", response_model=DataResponse[CustomerSchema], dependencies=[Depends(authenticate)])
 def get_current_customer(current_customer: Customer = Depends(authenticate)):
     return DataResponse.custom_response(code="200", message="Get current customer successfully", data=current_customer)
