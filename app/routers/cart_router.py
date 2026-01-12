@@ -31,23 +31,17 @@ async def get_cart(cart_id: int, db: Session = Depends(get_db)):
 		return DataResponse.custom_response(code="404", message="Cart not found", data=None)
 	return DataResponse.custom_response(code="200", message="Get cart by id", data=cart)
 
-@router.get("/carts-by-customer", tags=["carts"], description="Get carts by customer id")
+@router.get("/carts-by-customer/{customer_id}", tags=["carts"], description="Get carts by customer id", response_model=DataResponse[list[CartSchema]])
 async def get_carts(
-    customer_id: int | None = Query(default=None),
-    db: Session = Depends(get_db)
-):
-    query = db.query(Cart)
+	customer_id: int,
+	db: Session = Depends(get_db)
+	):
+	query = db.query(Cart).filter(Cart.customer_id == customer_id)
+	carts = query.all()
 
-    if customer_id is not None:
-        query = query.filter(Cart.customer_id == customer_id)
-
-    carts = query.all()
-
-    return DataResponse.custom_response(
-        code="200",
-        message="Get carts",
-        data=carts
-    )
+	if not carts:
+		return DataResponse.custom_response(code="404", message="Cart not found", data=None)
+	return DataResponse.custom_response(code="200", message="Get carts by customer id", data=carts)
 
 @router.delete("/carts/{cart_id}", tags=["carts"], description="Delete a cart by id", response_model=DataResponse[CartSchema])
 async def delete_cart(cart_id: int, db: Session = Depends(get_db)):
