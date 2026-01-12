@@ -8,12 +8,16 @@ class CustomerSchema(BaseModel):
     id: int
     username: str
     email: str
+    phone_number: str | None = None
+    address: str | None = None
     is_deactivated: int
 
 class RegisterCustomerSchema(BaseModel):
     username: str
     email: str
     password: str
+    phone_number: str | None = None
+    address: str | None = None
     
     @field_validator('email')
     @classmethod
@@ -50,6 +54,8 @@ class UpdateCustomerSchema(BaseModel):
     username: str | None = None
     email: str | None = None
     password: str | None = None
+    phone_number: str | None = None
+    address: str | None = None
     
     @field_validator('email')
     @classmethod

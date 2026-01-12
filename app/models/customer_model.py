@@ -27,3 +27,5 @@ class Customer(BaseModel):
     created_at: Mapped[datetime] = mapped_column(DateTime, index=True, default=datetime.now)
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now)
     is_deactivated: Mapped[bool] = mapped_column(Boolean, default=True)
+    phone_number: Mapped[str | None] = mapped_column(String(length=10), nullable=True)
+    address: Mapped[str | None] = mapped_column(String(length=255), nullable=True)
