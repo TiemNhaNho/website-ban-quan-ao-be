@@ -22,9 +22,14 @@ from app.routers.coupon_router import router as coupon_router
 from app.routers.shipping_method_router import router as shipping_method_router
 from app.routers.dropdown_foreign_key_router import router as dropdown_fk_router
 from pathlib import Path
+import stripe
+
 Base.metadata.create_all(bind=engine)
 
 settings = get_settings()
+
+#load stripe.api_key
+stripe.api_key = settings.STRIPE_API_KEY
 
 app = FastAPI(
     title="Tiem Nha Nho API",
