@@ -38,6 +38,8 @@ class Settings:
     FACEBOOK_TOKEN_ENDPOINT = "https://graph.facebook.com/v18.0/oauth/access_token"
     FACEBOOK_USERINFO_ENDPOINT = "https://graph.facebook.com/me"
     
+    #Stripe API key
+    STRIPE_API_KEY: str = os.getenv("STRIPE_API_KEY", "")
     # App Settings
     port: int = int(os.getenv("PORT", 8000))
     reload: bool = os.getenv("RELOAD", "true").lower() == "true"

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from app.db.base import get_db
 from sqlalchemy.orm import Session
 from app.models.cart_model import Cart
@@ -30,6 +30,24 @@ async def get_cart(cart_id: int, db: Session = Depends(get_db)):
 	if not cart:
 		return DataResponse.custom_response(code="404", message="Cart not found", data=None)
 	return DataResponse.custom_response(code="200", message="Get cart by id", data=cart)
+
+@router.get("/carts-by-customer", tags=["carts"], description="Get carts by customer id")
+async def get_carts(
+    customer_id: int | None = Query(default=None),
+    db: Session = Depends(get_db)
+):
+    query = db.query(Cart)
+
+    if customer_id is not None:
+        query = query.filter(Cart.customer_id == customer_id)
+
+    carts = query.all()
+
+    return DataResponse.custom_response(
+        code="200",
+        message="Get carts",
+        data=carts
+    )
 
 @router.delete("/carts/{cart_id}", tags=["carts"], description="Delete a cart by id", response_model=DataResponse[CartSchema])
 async def delete_cart(cart_id: int, db: Session = Depends(get_db)):

@@ -49,3 +49,4 @@ cryptography==46.0.3
 bcrypt==4.3.0
 PyJWT==2.10.1
 aiofiles
+stripe

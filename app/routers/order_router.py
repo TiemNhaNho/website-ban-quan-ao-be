@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from app.db.base import get_db
 from sqlalchemy.orm import Session
 from sqlalchemy import text
@@ -9,6 +9,7 @@ from app.schemas.base_schema import DataResponse
 from app.services.order_service import send_order_confirmation_mail
 from app.models.shipping_method_model import ShippingMethod
 from app.models.coupon_model import Coupon
+import stripe
 
 router = APIRouter()
 
@@ -23,13 +24,27 @@ async def create_order(data: CreateOrderDetailSchema, db: Session = Depends(get_
 	coupon = db.query(Coupon).filter(Coupon.coupon_id == data.coupon_id).first()
 	discount_amount = coupon.discount_value if coupon else 0
 	shipping_fee = shipping.base_cost
+	#stripe 
+	if "payment_method" not in data:
+		raise HTTPException(status_code=400, detail="Payment method is required")
+	
+	payment_method = stripe.PaymentMethod.attach(
+		data["payment_method"],
+		customer = f"cus_{data.customer_id}" #stripe's customer id format
+	)
+	stripe.Customer.modify(
+		f"cus_{data.customer_id}",
+		invoice_settings={
+			"default_payment_method": data["payment_method"]
+		}
+	)
 	db_order = Order(
 		customer_id=data.customer_id,
 		coupon_id=data.coupon_id,
 		shipping_method_id=data.shipping_method_id,
 		discount_amount=discount_amount,
 		shipping_fee=shipping_fee,
-		payment_method=data.payment_method,
+		payment_method=payment_method.id,
 	)
 	db.add(db_order)
 	db.commit()
