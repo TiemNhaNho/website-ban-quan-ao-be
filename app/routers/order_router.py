@@ -20,47 +20,53 @@ async def get_orders(db: Session = Depends(get_db)):
 
 @router.post("/orders", tags=["orders"], description="Create a new order", response_model=DataResponse[OrderSchema])
 async def create_order(data: CreateOrderDetailSchema, db: Session = Depends(get_db)):
-	shipping = db.query(ShippingMethod).filter(ShippingMethod.shipping_method_id == data.shipping_method_id).first()
-	coupon = db.query(Coupon).filter(Coupon.coupon_id == data.coupon_id).first()
-	discount_amount = coupon.discount_value if coupon else 0
-	shipping_fee = shipping.base_cost
-	#stripe 
-	if "payment_method" not in data:
-		raise HTTPException(status_code=400, detail="Payment method is required")
-	
-	payment_method = stripe.PaymentMethod.attach(
-		data["payment_method"],
-		customer = f"cus_{data.customer_id}" #stripe's customer id format
-	)
-	stripe.Customer.modify(
-		f"cus_{data.customer_id}",
-		invoice_settings={
-			"default_payment_method": data["payment_method"]
-		}
-	)
-	db_order = Order(
-		customer_id=data.customer_id,
-		coupon_id=data.coupon_id,
-		shipping_method_id=data.shipping_method_id,
-		discount_amount=discount_amount,
-		shipping_fee=shipping_fee,
-		payment_method=payment_method.id,
-	)
-	db.add(db_order)
-	db.commit()
-	db.refresh(db_order)
-	db.execute(
-    text("CALL create_order_detail_from_cart(:order_id, :customer_id)"),
-    {
-        "order_id": db_order.order_id,
-        "customer_id": db_order.customer_id
-    }
-)
-	db.commit()
-	customer = db.query(Customer).filter(Customer.id == db_order.customer_id).first()
-	if customer:
-		send_order_confirmation_mail(customer, db_order)
-	return DataResponse.custom_response(code="201", message="Created order", data=db_order)
+    # Shipping & coupon
+    shipping = db.query(ShippingMethod).filter(ShippingMethod.shipping_method_id == data.shipping_method_id).first() if data.shipping_method_id else None
+    coupon = db.query(Coupon).filter(Coupon.coupon_id == data.coupon_id).first() if data.coupon_id else None
+    discount_amount = coupon.discount_value if coupon else 0
+    shipping_fee = shipping.base_cost if shipping else 0
+
+    # Payment method validation
+    if not data.payment_method:
+        raise HTTPException(status_code=400, detail="Payment method is required")
+
+    # Stripe attach
+    payment_method = stripe.PaymentMethod.attach(
+        data.payment_method,
+        customer=f"cus_{data.customer_id}"
+    )
+    stripe.Customer.modify(
+        f"cus_{data.customer_id}",
+        invoice_settings={"default_payment_method": data.payment_method}
+    )
+
+    # Create order in DB
+    db_order = Order(
+        customer_id=data.customer_id,
+        coupon_id=data.coupon_id,
+        shipping_method_id=data.shipping_method_id,
+        discount_amount=discount_amount,
+        shipping_fee=shipping_fee,
+        payment_method=payment_method.id,
+    )
+    db.add(db_order)
+    db.commit()
+    db.refresh(db_order)
+
+    # Call stored procedure to move cart items to order details
+    db.execute(
+        text("CALL create_order_detail_from_cart(:order_id, :customer_id)"),
+        {"order_id": db_order.order_id, "customer_id": db_order.customer_id}
+    )
+    db.commit()
+
+    # Send confirmation mail
+    customer = db.query(Customer).filter(Customer.id == db_order.customer_id).first()
+    if customer:
+        send_order_confirmation_mail(customer, db_order)
+
+    return DataResponse.custom_response(code="201", message="Created order", data=db_order)
+
 
 @router.get("/orders/{order_id}", tags=["orders"], description="Get an order by id", response_model=DataResponse[OrderSchema])
 async def get_order(order_id: int, db: Session = Depends(get_db)):
