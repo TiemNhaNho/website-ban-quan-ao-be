@@ -27,8 +27,8 @@ class OrderSchema(BaseModel):
 
 class CreateOrderDetailSchema(BaseModel):
     customer_id: int
-    coupon_id: int
-    shipping_method_id: int
+    coupon_id: Optional[int] = None
+    shipping_method_id: Optional[int] = None
     # order_date: datetime
     # subtotal: float
     # discount_amount: float
