@@ -23,20 +23,29 @@ async def create_order(data: CreateOrderDetailSchema, db: Session = Depends(get_
     # Shipping & coupon
     shipping = db.query(ShippingMethod).filter(ShippingMethod.shipping_method_id == data.shipping_method_id).first() if data.shipping_method_id else None
     coupon = db.query(Coupon).filter(Coupon.coupon_id == data.coupon_id).first() if data.coupon_id else None
+    customer = db.query(Customer).filter(Customer.id == data.customer_id).first()
     discount_amount = coupon.discount_value if coupon else 0
     shipping_fee = shipping.base_cost if shipping else 0
 
     # Payment method validation
     if not data.payment_method:
         raise HTTPException(status_code=400, detail="Payment method is required")
-
+    try:
+        stripe_customer = stripe.Customer.retrieve(f"cus_{data.customer_id}")
+    except stripe.error.InvalidRequestError:
+        # Customer doesn't exist, create it
+        stripe_customer = stripe.Customer.create(
+            id=f"cus_{data.customer_id}",  # optional, or just store stripe id separately
+            name=f"{customer.username} Name",          # fill from your DB if needed
+            email=f"{customer.email}"
+    )
     # Stripe attach
     payment_method = stripe.PaymentMethod.attach(
-        data.payment_method,
-        customer=f"cus_{data.customer_id}"
-    )
+    data.payment_method,
+    customer=stripe_customer.id
+)
     stripe.Customer.modify(
-        f"cus_{data.customer_id}",
+        stripe_customer.id,
         invoice_settings={"default_payment_method": data.payment_method}
     )
 
