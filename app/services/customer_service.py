@@ -140,23 +140,8 @@ async def process_oauth_user(userinfo: dict, db: Session, provider: str):
         
     token = create_access_token(customer)
     
-    # # Redirect về frontend OAuth callback page
-    # # IMPORTANT: Update this URL to match your Live Server setup
-    # # Check your browser URL when opening login.html, then use the same base path
+    return RedirectResponse(f"{settings.FRONTEND_URL}?token={token}")
     
-    # # Option 1: Live Server opened from TiemNhaNho folder (most common)
-    # redirect_url = f"http://127.0.0.1:5500/oauth-callback.html?token={token}&provider={provider}"
-    
-    # # Option 2: Live Server opened from root project folder
-    # # redirect_url = f"http://127.0.0.1:5500/website-ban-quan-ao-fe/TiemNhaNho/oauth-callback.html?token={token}&provider={provider}"
-    
-    # # Option 3: Python HTTP server from TiemNhaNho folder
-    # # redirect_url = f"http://localhost:5500/oauth-callback.html?token={token}&provider={provider}"
-    
-    # return RedirectResponse(url=redirect_url)
-    
-    return DataResponse.custom_response(code="200", message=f"Login customer with {provider} successfully", data=LoginCustomerResponseSchema(access_token=token, token_type="Bearer"))
-
 def login_with_facebook():
     query_params = {
         "client_id": settings.FACEBOOK_CLIENT_ID,
