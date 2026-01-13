@@ -9,6 +9,9 @@ from app.schemas.base_schema import DataResponse
 from app.services.order_service import send_order_confirmation_mail
 from app.models.shipping_method_model import ShippingMethod
 from app.models.coupon_model import Coupon
+from app.models.order_detail_model import OrderDetail
+from app.models.product_variant import ProductVariant
+from app.models.product_model import Product
 import stripe
 
 router = APIRouter()
@@ -71,8 +74,44 @@ async def create_order(data: CreateOrderDetailSchema, db: Session = Depends(get_
 
     # Send confirmation mail
     customer = db.query(Customer).filter(Customer.id == db_order.customer_id).first()
+    order_details = db.query(OrderDetail).filter(OrderDetail.order_id == db_order.order_id).all()
+    variant_ids = [od.variant_id for od in order_details]
+    variants = db.query(ProductVariant).filter(ProductVariant.variant_id.in_(variant_ids)).all()
+    product_ids = [v.product_id for v in variants]
+    products = db.query(Product).filter(Product.product_id.in_(product_ids)).all()
+    variant_map = {v.variant_id: v for v in variants}
+    product_map = {p.product_id: p for p in products}
+    products_bought = {}
+
+    for od in order_details:
+        variant = variant_map.get(od.variant_id)
+        if not variant:
+            continue
+
+        product = product_map.get(variant.product_id)
+        if not product:
+            continue
+
+        pid = product.product_id
+
+        if pid not in products_bought:
+            products_bought[pid] = {
+                "product_name": product.product_name,
+                "variants": []
+            }
+
+        products_bought[pid]["variants"].append({
+            "color": variant.color,
+            "size": variant.size,
+            "quantity": od.quantity
+        })
+    products_bought = list(products_bought.values())
     if customer:
-        send_order_confirmation_mail(customer, db_order)
+        send_order_confirmation_mail(
+            customer=customer,
+            order=db_order,
+            products_bought=products_bought
+        )
 
     return DataResponse.custom_response(code="201", message="Created order", data=db_order)
 

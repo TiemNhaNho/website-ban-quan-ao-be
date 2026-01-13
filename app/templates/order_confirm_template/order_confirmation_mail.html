@@ -69,6 +69,12 @@ table, td { color: #000000; } </style>
 </head>
 
 <body class="clean-body u_body" style="margin: 0;padding: 0;-webkit-text-size-adjust: 100%;background-color: #f9f9f9;color: #000000">
+  <p style="line-height: 160%; margin-top: 20px;">
+  <strong>Mã đơn hàng:</strong> {{ order.order_id }}<br>
+  <strong>Khách hàng:</strong> {{ customer.name }}<br>
+  <strong>Email:</strong> {{ customer.email }}
+</p>
+
   <!--[if IE]><div class="ie-container"><![endif]-->
   <!--[if mso]><div class="mso-container"><![endif]-->
   <table role="presentation" id="u_body" style="border-collapse: collapse;table-layout: fixed;border-spacing: 0;mso-table-lspace: 0pt;mso-table-rspace: 0pt;vertical-align: top;min-width: 320px;Margin: 0 auto;background-color: #f9f9f9;width:100%" cellpadding="0" cellspacing="0">
@@ -78,7 +84,7 @@ table, td { color: #000000; } </style>
     <!--[if (mso)|(IE)]><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center" style="background-color: #f9f9f9;"><![endif]-->
     
   
-  
+
 <div class="u-row-container" style="padding: 0px;background-color: transparent">
   <div class="u-row" style="margin: 0 auto;min-width: 320px;max-width: 600px;overflow-wrap: break-word;word-wrap: break-word;word-break: break-word;background-color: transparent;">
     <div style="border-collapse: collapse;display: table;width: 100%;height: 100%;background-color: transparent;">
@@ -229,7 +235,48 @@ table, td { color: #000000; } </style>
 
 
   
-  
+  <div class="u-row-container" style="padding: 0px;background-color: transparent">
+  <div class="u-row" style="margin: 0 auto;min-width: 320px;max-width: 600px;background-color: #ffffff;">
+    <div style="display: table;width: 100%;">
+
+      <div class="u-col u-col-100" style="min-width: 600px;display: table-cell;">
+        <div style="padding: 20px 40px;font-family:'Cabin',sans-serif;">
+
+          <h3 style="text-align:center;color:#003399;">
+            🛒 Sản phẩm đã mua
+          </h3>
+
+          {% for product in products_bought %}
+            <p style="margin-top:15px;">
+              <strong>{{ product.product_name }}</strong>
+            </p>
+
+            <table width="100%" cellpadding="6" cellspacing="0" style="border-collapse: collapse;">
+              <thead>
+                <tr style="background-color:#f4f4f4;">
+                  <th align="left">Màu sắc</th>
+                  <th align="left">Size</th>
+                  <th align="center">Số lượng</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for v in product.variants %}
+                <tr>
+                  <td>{{ v.color }}</td>
+                  <td>{{ v.size }}</td>
+                  <td align="center">{{ v.quantity }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          {% endfor %}
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>    
 <div class="u-row-container" style="padding: 0px;background-color: transparent">
   <div class="u-row" style="margin: 0 auto;min-width: 320px;max-width: 600px;overflow-wrap: break-word;word-wrap: break-word;word-break: break-word;background-color: #ffffff;">
     <div style="border-collapse: collapse;display: table;width: 100%;height: 100%;background-color: transparent;">
