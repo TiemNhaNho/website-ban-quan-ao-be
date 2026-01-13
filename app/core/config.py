@@ -44,6 +44,7 @@ class Settings:
     port: int = int(os.getenv("PORT", 8000))
     reload: bool = os.getenv("RELOAD", "true").lower() == "true"
     REDIRECT_URI: str = os.getenv("REDIRECT_URI", "http://localhost:8000/auth/callback")
+    FRONTEND_URL: str = os.getenv("FRONTEND_URL", "http://localhost:5500/index.html")
 
 @lru_cache()
 def get_settings() -> Settings:
