@@ -15,7 +15,17 @@ async def get_product_variants(db: Session = Depends(get_db)):
         code="200", message="Get list product variants", data=product_variants
     
     )
-    
+@router.get("/product-variants-by-product/{product_id}", tags=["product-variants"], description="Get product variants by product id", response_model=DataResponse[list[ProductVariantSchema]])
+async def get_product_variant(product_id: int, db: Session = Depends(get_db)):
+    product_variant = db.query(ProductVariant).filter(ProductVariant.product_id == product_id).all()
+    if not product_variant:
+        return DataResponse.custom_response(
+            code="404", message="Product variants not found", data=None
+        )
+    return DataResponse.custom_response(
+        code="200", message="Get product variants by product id", data=product_variant
+    )
+
 @router.get("/product-variants/{variant_id}", tags=["product-variants"], description="Get a product variant by id", response_model=DataResponse[ProductVariantSchema])
 async def get_product_variant(variant_id: int, db: Session = Depends(get_db)):
     product_variant = db.query(ProductVariant).filter(ProductVariant.variant_id == variant_id).first()
