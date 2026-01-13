@@ -24,7 +24,17 @@ async def get_product_image(image_id: int, db: Session = Depends(get_db)):
     return DataResponse.custom_response(
         code="200", message="Get product image by id", data=product_image
     )
-
+@router.get("/product-images-by-product/{product_id}", tags=["product-images"], description="Get product images by product id", response_model=DataResponse[list[ProductImageSchema]])
+async def get_product_images_by_productId(product_id: int, db: Session = Depends(get_db)):
+    product_image = db.query(ProductImage).filter(ProductImage.image_id == product_id).all()
+    if not product_image:
+        return DataResponse.custom_response(
+            code="404", message="Product images not found", data=None
+        )
+    return DataResponse.custom_response(
+        code="200", message="Get product images by product id", data=product_image
+    )
+    
 @router.post("/product-images", tags=["product-images"], description="Create a new product image", response_model=DataResponse[ProductImageSchema])
 async def create_product_image(data: CreateProductImageSchema, db: Session = Depends(get_db)):
     db_product_image = ProductImage(**data.dict())

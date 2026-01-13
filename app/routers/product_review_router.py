@@ -14,6 +14,17 @@ async def get_product_reviews(db: Session = Depends(get_db)):
         code="200", message="Get list product reviews", data=product_reviews
     )
 
+@router.get("/product-reviews-by-product/{product_id}", tags=["product-reviews"], description="Get product reviews by product id", response_model=DataResponse[list[ProductReviewSchema]])
+async def get_product_review(product_id: int, db: Session = Depends(get_db)):
+    product_review = db.query(ProductReview).filter(ProductReview.product_id == product_id).all()
+    if not product_review:
+        return DataResponse.custom_response(
+            code="404", message="Product reviews not found", data=None
+        )
+    return DataResponse.custom_response(
+        code="200", message="Get product reviews by product id", data=product_review
+    )
+
 @router.get("/product-reviews/{review_id}", tags=["product-reviews"], description="Get a product review by id", response_model=DataResponse[ProductReviewSchema])
 async def get_product_review(review_id: int, db: Session = Depends(get_db)):
     product_review = db.query(ProductReview).filter(ProductReview.review_id == review_id).first()
