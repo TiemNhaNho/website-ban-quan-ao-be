@@ -14,6 +14,13 @@ async def get_products(db: Session = Depends(get_db)):
     products = db.query(Product).all()
     return DataResponse.custom_response(code="200", message="get list products", data=products)
 
+@router.get("/products-by-category/{category_id}", tags=['products'], description="Get all products by category_id", response_model=DataResponse[list[ProductSchema]])
+async def get_products_by_category(category_id:int, db: Session = Depends(get_db)):
+    products = db.query(Product).filter(Product.category_id == category_id).all()
+    if not products:
+        return DataResponse.custom_response(code="404", message="Products not found", data=None)
+    return DataResponse.custom_response(code="200", message="Get products by category id", data=products)
+
 @router.post("/products", tags=["products"], description="Create a new product", response_model=DataResponse[ProductSchema], dependencies=[Depends(require_admin)])
 async def create_product(data: CreateProductSchema, db: Session = Depends(get_db)):
     db_product = Product(**data.dict())
